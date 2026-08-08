@@ -134,8 +134,11 @@ const getComplaintById = async (req, res) => {
       }
     }
 
-    const complaint = memoryComplaints.find(c => c._id === id || c.id === id) || memoryComplaints[0];
-    const logs = memoryStatusLogs.filter(l => l.complaintId === complaint._id);
+    const complaint = memoryComplaints.find(c => c._id === id || c.id === id);
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: 'Complaint not found' });
+    }
+    const logs = memoryStatusLogs.filter(l => l.complaintId === complaint._id || l.complaintId === id);
     res.json({ success: true, complaint, statusLogs: logs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

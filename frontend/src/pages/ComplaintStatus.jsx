@@ -18,8 +18,9 @@ const ComplaintStatus = () => {
       const res = await fetchMyComplaintsAPI(token);
       if (res.success && res.complaints) {
         dispatch(setComplaints(res.complaints));
-        if (res.complaints.length > 0 && !selectedComplaint) {
-          loadSingleComplaintDetails(res.complaints[0]._id || res.complaints[0].id);
+        const activeId = selectedComplaint?._id || selectedComplaint?.id || (res.complaints.length > 0 ? (res.complaints[0]._id || res.complaints[0].id) : null);
+        if (activeId) {
+          await loadSingleComplaintDetails(activeId);
         }
       }
     } catch (err) {
