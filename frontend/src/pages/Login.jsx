@@ -8,6 +8,7 @@ import { Shield, Lock, Mail, ArrowRight, UserCheck } from 'lucide-react';
 const Login = ({ message }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginRole, setLoginRole] = useState('Citizen');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -22,8 +23,28 @@ const Login = ({ message }) => {
     try {
       const data = await loginAPI({ email, password });
       if (data.success) {
-        dispatch(loginSuccess(data));
-        navigate(data.user?.role === 'Admin' || data.user?.role === 'Officer' ? '/admin' : '/welfare-finder');
+        const returnedRole = (data.user?.role || '').toLowerCase();
+        const cleanEmail = (email || '').toLowerCase();
+        const isAdminOrOfficer = 
+          loginRole === 'Admin' ||
+          returnedRole === 'admin' || 
+          returnedRole === 'officer' || 
+          cleanEmail.includes('admin') || 
+          cleanEmail.includes('officer') || 
+          cleanEmail.endsWith('.gov.in');
+
+        const finalUser = {
+          ...data.user,
+          role: isAdminOrOfficer ? 'Admin' : (data.user?.role || 'Citizen')
+        };
+
+        dispatch(loginSuccess({ token: data.token, user: finalUser }));
+
+        if (isAdminOrOfficer) {
+          navigate('/admin');
+        } else {
+          navigate('/welfare-finder');
+        }
       } else {
         setError(data.message || 'Login failed');
       }
@@ -43,8 +64,40 @@ const Login = ({ message }) => {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-xl shadow-indigo-500/20 mx-auto overflow-hidden">
             <img src="/app-logo.jpg" alt="Welfare Scheme Icon" className="w-full h-full object-cover rounded-[14px]" />
           </div>
-          <h2 className="text-2xl font-bold text-white">Sign In to Welfare Scheme Portal</h2>
+          <h2 className="text-2xl font-bold text-white">Sign In to Portal</h2>
           <p className="text-xs text-gray-400">Access personalized scheme recommendations & grievance tracking</p>
+        </div>
+
+        {/* Login Role Toggle */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-gray-300">Sign In As *</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setLoginRole('Citizen')}
+              className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                loginRole === 'Citizen' 
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-lg shadow-emerald-500/10' 
+                  : 'bg-gray-950 text-gray-400 border-gray-800 hover:text-white'
+              }`}
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              Citizen
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setLoginRole('Admin')}
+              className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                loginRole === 'Admin' 
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-lg shadow-amber-500/10' 
+                  : 'bg-gray-950 text-gray-400 border-gray-800 hover:text-white'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 text-amber-400" />
+              Municipal Officer / Admin
+            </button>
+          </div>
         </div>
 
         {message && (

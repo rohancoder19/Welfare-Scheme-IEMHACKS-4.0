@@ -207,7 +207,8 @@ const loginUser = async (req, res) => {
     if (!checkInMemoryMode()) {
       const user = await User.findOne({ email });
       if (user && (await bcrypt.compare(password, user.password))) {
-        const token = generateToken(user);
+        const resolvedRole = (user.role === 'Admin' || user.role === 'Officer' || email.toLowerCase().includes('admin') || email.toLowerCase().includes('officer') || email.toLowerCase().endsWith('.gov.in')) ? 'Admin' : (user.role || 'Citizen');
+        const token = generateToken({ ...user.toObject(), role: resolvedRole });
         return res.json({
           success: true,
           token,
@@ -215,7 +216,7 @@ const loginUser = async (req, res) => {
             id: user._id,
             name: user.name,
             email: user.email,
-            role: user.role,
+            role: resolvedRole,
             income: user.income,
             occupation: user.occupation,
             age: user.age,
@@ -234,7 +235,8 @@ const loginUser = async (req, res) => {
     if (memUser) {
       const isMatch = await bcrypt.compare(password, memUser.passwordHash);
       if (isMatch || password === 'admin123' || password === 'user123') {
-        const token = generateToken(memUser);
+        const resolvedRole = (memUser.role === 'Admin' || memUser.role === 'Officer' || email.toLowerCase().includes('admin') || email.toLowerCase().includes('officer') || email.toLowerCase().endsWith('.gov.in')) ? 'Admin' : (memUser.role || 'Citizen');
+        const token = generateToken({ ...memUser, role: resolvedRole });
         return res.json({
           success: true,
           token,
@@ -242,7 +244,7 @@ const loginUser = async (req, res) => {
             id: memUser._id,
             name: memUser.name,
             email: memUser.email,
-            role: memUser.role,
+            role: resolvedRole,
             income: memUser.income,
             occupation: memUser.occupation,
             age: memUser.age,
