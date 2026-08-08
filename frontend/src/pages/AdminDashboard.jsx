@@ -17,6 +17,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [aiModalComplaint, setAiModalComplaint] = useState(null);
 
   // Status update modal
   const [editingComplaint, setEditingComplaint] = useState(null);
@@ -539,9 +540,11 @@ const AdminDashboard = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedComplaint(cmp);
+                          setAiModalComplaint(cmp);
                         }}
-                        className="px-2.5 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-semibold"
+                        className="px-2.5 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-semibold border border-sky-500/30 hover:border-sky-400 flex items-center gap-1 transition-all"
                       >
+                        <Sparkles className="w-3.5 h-3.5" />
                         AI Analysis
                       </button>
 
@@ -743,6 +746,161 @@ const AdminDashboard = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* AI Grievance Intelligence Analysis Modal */}
+      {aiModalComplaint && (
+        <div className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full glass-panel rounded-3xl p-6 border border-sky-500/40 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-gray-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-sky-400 tracking-wider uppercase font-mono">
+                    🤖 AI GRIEVANCE ANALYSIS & AUDIT DETAILS
+                  </h3>
+                  <p className="text-base font-extrabold text-white">{aiModalComplaint.title}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAiModalComplaint(null)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Classification Attributes */}
+              <div className="glass-panel p-4 rounded-2xl border border-gray-800 space-y-3 text-xs">
+                <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider">Classification Attributes</h4>
+
+                <div className="flex justify-between py-1 border-b border-gray-800">
+                  <span className="text-gray-400">Category:</span>
+                  <span className="font-bold text-white">{aiModalComplaint.aiAnalysis?.category || aiModalComplaint.category}</span>
+                </div>
+
+                <div className="flex justify-between py-1 border-b border-gray-800">
+                  <span className="text-gray-400">Subcategory:</span>
+                  <span className="font-bold text-sky-300">{aiModalComplaint.aiAnalysis?.subcategory || 'General'}</span>
+                </div>
+
+                <div className="flex justify-between py-1 border-b border-gray-800">
+                  <span className="text-gray-400">AI Priority:</span>
+                  <span className={`font-mono font-bold px-2 py-0.5 rounded ${
+                    (aiModalComplaint.priority || '').toUpperCase() === 'CRITICAL' ? 'bg-red-500/20 text-red-400' :
+                    (aiModalComplaint.priority || '').toUpperCase() === 'HIGH' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
+                  }`}>
+                    {aiModalComplaint.priority}
+                  </span>
+                </div>
+
+                <div className="py-1 border-b border-gray-800 space-y-1">
+                  <div className="flex justify-between text-gray-400">
+                    <span>Urgency Score:</span>
+                    <span className="font-mono font-bold text-amber-400">
+                      {aiModalComplaint.aiAnalysis?.urgencyScore || aiModalComplaint.priorityScore || 87}/100
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-gray-900 overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full"
+                      style={{ width: `${aiModalComplaint.aiAnalysis?.urgencyScore || aiModalComplaint.priorityScore || 87}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between py-1 border-b border-gray-800">
+                  <span className="text-gray-400">Confidence Score:</span>
+                  <span className="font-bold font-mono text-emerald-400">
+                    {Math.round((aiModalComplaint.aiAnalysis?.confidence || 0.94) * 100)}%
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1 border-b border-gray-800">
+                  <span className="text-gray-400">Recommended SLA:</span>
+                  <span className="font-bold font-mono text-sky-400">
+                    {aiModalComplaint.aiAnalysis?.recommendedSLAHours || aiModalComplaint.slaHours || 48} hours
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-400">Assigned Department:</span>
+                  <span className="font-bold text-gray-200 truncate max-w-[150px]">
+                    {aiModalComplaint.aiAnalysis?.department || aiModalComplaint.assignedOfficer}
+                  </span>
+                </div>
+              </div>
+
+              {/* Explanations & Action Plan */}
+              <div className="glass-panel p-4 rounded-2xl border border-gray-800 space-y-3 text-xs flex flex-col justify-between">
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase text-sky-400 tracking-wider mb-2">AI Non-Technical Explanation</h4>
+                  <ul className="space-y-1.5 text-gray-300">
+                    {(aiModalComplaint.aiAnalysis?.reason || [
+                      "Public interest & community impact detected",
+                      "Reported active duration requiring field intervention",
+                      "Standard SLA priority assigned by Civic AI model"
+                    ]).map((r, i) => (
+                      <li key={i} className="flex items-start gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                        <span>{r}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="pt-2 border-t border-gray-800">
+                  <h4 className="text-[11px] font-bold uppercase text-amber-400 tracking-wider mb-1">Recommended Response Action</h4>
+                  <p className="text-gray-300 italic text-[11px] leading-relaxed">
+                    "{aiModalComplaint.aiAnalysis?.recommendedAction || 'Immediate municipal inspection and field unit assignment.'}"
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Description & Location */}
+            <div className="p-3.5 rounded-2xl bg-gray-950/80 border border-gray-800 text-xs space-y-1">
+              <span className="font-bold text-gray-400 block">Citizen Description & Location:</span>
+              <p className="text-gray-200">{aiModalComplaint.description}</p>
+              <p className="text-sky-400 font-mono text-[11px]">📍 {aiModalComplaint.location?.address}</p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+              <button
+                onClick={() => {
+                  setOverrideModalComplaint(aiModalComplaint);
+                  setOverrideCategory(aiModalComplaint.category || 'Sanitation');
+                  setOverridePriority(aiModalComplaint.priority || 'HIGH');
+                  setOverrideDepartment(aiModalComplaint.assignedOfficer || 'Municipal Sanitation');
+                  setOverrideSLA(aiModalComplaint.slaHours || 48);
+                  setOverrideReason('');
+                  setAiModalComplaint(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                ⚡ Override AI Decision
+              </button>
+
+              <button
+                onClick={() => setAiModalComplaint(null)}
+                className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs"
+              >
+                Close AI Audit
+              </button>
+            </div>
+
           </div>
         </div>
       )}
