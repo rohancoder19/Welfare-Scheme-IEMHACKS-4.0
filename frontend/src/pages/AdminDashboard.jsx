@@ -188,8 +188,15 @@ const AdminDashboard = () => {
                     <button
                       onClick={() => {
                         setEditingComplaint(cmp);
-                        setStatusInput(cmp.status);
-                        setOfficerInput(cmp.assignedOfficer);
+                        const nextStatusMap = {
+                          'Submitted': 'Under Review',
+                          'Under Review': 'In Progress',
+                          'In Progress': 'Resolved',
+                          'Resolved': 'Resolved',
+                          'Rejected': 'Rejected'
+                        };
+                        setStatusInput(nextStatusMap[cmp.status] || 'Under Review');
+                        setOfficerInput(cmp.assignedOfficer || 'District Ward Officer');
                       }}
                       className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold"
                     >

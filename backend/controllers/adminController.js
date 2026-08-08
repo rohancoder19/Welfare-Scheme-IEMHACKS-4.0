@@ -31,10 +31,10 @@ const getAllComplaints = async (req, res) => {
 const updateComplaintStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, remarks, assignedOfficer } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ success: false, message: 'Status is required' });
+    let finalStatus = status;
+    // Auto-promote status if officer logs an action while grievance is still Submitted
+    if (finalStatus === 'Submitted') {
+      finalStatus = 'Under Review';
     }
 
     const updater = req.user?.name || 'Officer Rajesh Sharma';
@@ -42,15 +42,15 @@ const updateComplaintStatus = async (req, res) => {
     if (!checkInMemoryMode()) {
       const complaint = await Complaint.findById(id);
       if (complaint) {
-        complaint.status = status;
+        complaint.status = finalStatus;
         if (assignedOfficer) complaint.assignedOfficer = assignedOfficer;
         complaint.updatedAt = new Date();
         await complaint.save();
 
         const newLog = await StatusLog.create({
           complaintId: id,
-          status,
-          remarks: remarks || `Status updated to ${status}`,
+          status: finalStatus,
+          remarks: remarks || `Status updated to ${finalStatus}`,
           updatedBy: updater
         });
 
@@ -61,15 +61,15 @@ const updateComplaintStatus = async (req, res) => {
     // In-memory update
     const complaint = memoryComplaints.find(c => c._id === id || c.id === id);
     if (complaint) {
-      complaint.status = status;
+      complaint.status = finalStatus;
       if (assignedOfficer) complaint.assignedOfficer = assignedOfficer;
       complaint.updatedAt = new Date();
 
       const newLog = {
         _id: 'log_' + Date.now(),
         complaintId: complaint._id,
-        status,
-        remarks: remarks || `Status updated to ${status}`,
+        status: finalStatus,
+        remarks: remarks || `Status updated to ${finalStatus}`,
         updatedBy: updater,
         timestamp: new Date()
       };
