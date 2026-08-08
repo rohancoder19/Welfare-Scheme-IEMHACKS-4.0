@@ -1,8 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { sendChatMessageAPI } from '../services/chatbotAPI';
 import { Bot, Send, X, MessageSquare, Sparkles, User, RefreshCw } from 'lucide-react';
 
 const Chatbot = () => {
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
+  if (isAuthPage) return null;
   const [isOpen, setIsOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
