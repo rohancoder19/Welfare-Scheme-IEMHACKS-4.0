@@ -5,7 +5,7 @@ import { loginSuccess } from '../redux/authSlice';
 import { loginAPI } from '../services/authAPI';
 import { Shield, Lock, Mail, ArrowRight, UserCheck } from 'lucide-react';
 
-const Login = () => {
+const Login = ({ message }) => {
   const [email, setEmail] = useState('ananya@citizen.in');
   const [password, setPassword] = useState('user123');
   const [loading, setLoading] = useState(false);
@@ -56,6 +56,12 @@ const Login = () => {
           <h2 className="text-2xl font-bold text-white">Sign In to CivicAI</h2>
           <p className="text-xs text-gray-400">Access personalized scheme recommendations & grievance tracking</p>
         </div>
+
+        {message && (
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold text-center">
+            {message}
+          </div>
+        )}
 
         {/* Quick Demo Selector */}
         <div className="p-3 rounded-2xl bg-gray-900/90 border border-gray-800 space-y-2">

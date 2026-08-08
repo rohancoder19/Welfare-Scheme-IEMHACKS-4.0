@@ -40,61 +40,63 @@ const Navbar = () => {
             </div>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-1">
-            <Link
-              to="/"
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                isActive('/') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
-              }`}
-            >
-              Home
-            </Link>
-
-            <Link
-              to="/welfare-finder"
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
-                isActive('/welfare-finder') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
-              }`}
-            >
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              Scheme Recommender
-            </Link>
-
-            <Link
-              to="/complaint"
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
-                isActive('/complaint') ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30' : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
-              }`}
-            >
-              <AlertTriangle className="w-4 h-4 text-rose-400" />
-              File Grievance
-            </Link>
-
-            <Link
-              to="/complaint-status"
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
-                isActive('/complaint-status') ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30' : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
-              }`}
-            >
-              <FileText className="w-4 h-4 text-sky-400" />
-              Track Status
-            </Link>
-
-            {user?.role === 'Admin' || user?.role === 'Officer' ? (
+          {/* Desktop Nav Links (Hidden on Login/Register pages) */}
+          {!isAuthPage && (
+            <div className="hidden md:flex items-center gap-1">
               <Link
-                to="/admin"
-                className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 border transition-all ${
-                  isActive('/admin') 
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' 
-                    : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                to="/"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive('/') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
                 }`}
               >
-                <Shield className="w-4 h-4 text-amber-400" />
-                Officer Portal
+                Home
               </Link>
-            ) : null}
-          </div>
+
+              <Link
+                to="/welfare-finder"
+                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
+                  isActive('/welfare-finder') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                Scheme Recommender
+              </Link>
+
+              <Link
+                to="/complaint"
+                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
+                  isActive('/complaint') ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30' : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <AlertTriangle className="w-4 h-4 text-rose-400" />
+                File Grievance
+              </Link>
+
+              <Link
+                to="/complaint-status"
+                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
+                  isActive('/complaint-status') ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30' : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <FileText className="w-4 h-4 text-sky-400" />
+                Track Status
+              </Link>
+
+              {user?.role === 'Admin' || user?.role === 'Officer' ? (
+                <Link
+                  to="/admin"
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 border transition-all ${
+                    isActive('/admin') 
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' 
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                  }`}
+                >
+                  <Shield className="w-4 h-4 text-amber-400" />
+                  Officer Portal
+                </Link>
+              ) : null}
+            </div>
+          )}
 
           {/* User Auth Controls */}
           <div className="hidden md:flex items-center gap-3">
@@ -151,41 +153,47 @@ const Navbar = () => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden glass-panel border-b border-gray-800 px-4 pt-2 pb-6 space-y-2">
-          <Link
-            to="/"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-gray-800"
-          >
-            Home
-          </Link>
-          <Link
-            to="/welfare-finder"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-emerald-400 hover:bg-gray-800"
-          >
-            Scheme Recommender (AI)
-          </Link>
-          <Link
-            to="/complaint"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-rose-400 hover:bg-gray-800"
-          >
-            File Grievance
-          </Link>
-          <Link
-            to="/complaint-status"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-sky-400 hover:bg-gray-800"
-          >
-            Track Status
-          </Link>
-          <Link
-            to="/admin"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-amber-400 hover:bg-gray-800"
-          >
-            Officer Admin Portal
-          </Link>
+          {!isAuthPage && (
+            <>
+              <Link
+                to="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-gray-800"
+              >
+                Home
+              </Link>
+              <Link
+                to="/welfare-finder"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-medium text-emerald-400 hover:bg-gray-800"
+              >
+                Scheme Recommender (AI)
+              </Link>
+              <Link
+                to="/complaint"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-medium text-rose-400 hover:bg-gray-800"
+              >
+                File Grievance
+              </Link>
+              <Link
+                to="/complaint-status"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-medium text-sky-400 hover:bg-gray-800"
+              >
+                Track Status
+              </Link>
+              {user?.role === 'Admin' || user?.role === 'Officer' ? (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-md text-base font-medium text-amber-400 hover:bg-gray-800"
+                >
+                  Officer Admin Portal
+                </Link>
+              ) : null}
+            </>
+          )}
           <div className="pt-4 border-t border-gray-800 flex flex-col gap-2">
             {isAuthenticated ? (
               <button

@@ -13,6 +13,16 @@ import ComplaintStatus from './pages/ComplaintStatus';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 
+import { useSelector } from 'react-redux';
+
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  if (!isAuthenticated) {
+    return <Login message="Please register or sign in to access scheme recommendations and grievance tracking." />;
+  }
+  return children;
+};
+
 function App() {
   return (
     <Router>
@@ -24,11 +34,11 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/welfare-finder" element={<WelfareFinder />} />
-            <Route path="/complaint" element={<Complaint />} />
-            <Route path="/complaint-status" element={<ComplaintStatus />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/welfare-finder" element={<ProtectedRoute><WelfareFinder /></ProtectedRoute>} />
+            <Route path="/complaint" element={<ProtectedRoute><Complaint /></ProtectedRoute>} />
+            <Route path="/complaint-status" element={<ProtectedRoute><ComplaintStatus /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           </Routes>
         </main>
 
