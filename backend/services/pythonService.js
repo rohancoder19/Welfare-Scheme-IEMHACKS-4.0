@@ -93,7 +93,7 @@ class PythonMLService {
     try {
       const response = await axios.post(`${PYTHON_ML_URL}/chat`, {
         message
-      }, { timeout: 3000 });
+      }, { timeout: 12000 });
 
       if (response.data && response.data.success) {
         return response.data;
