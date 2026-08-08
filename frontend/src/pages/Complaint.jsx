@@ -284,8 +284,21 @@ const Complaint = () => {
                 <MapPin className="w-4 h-4 text-rose-400" />
                 Select Geolocation Coordinates on Map
               </h3>
-              <p className="text-xs text-gray-400">Map pin allows municipal inspection teams to pinpoint exact grievance coordinates.</p>
-              <Maps complaints={[]} height="340px" />
+              <p className="text-xs text-gray-400">Click anywhere on the map to pin exact grievance coordinates.</p>
+              <Maps 
+                complaints={[]} 
+                height="340px" 
+                center={[formData.lat, formData.lng]}
+                initialSelectedPos={[formData.lat, formData.lng]}
+                onSelectLocation={(lat, lng) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    lat,
+                    lng,
+                    address: `Pinpoint Location (${lat.toFixed(4)}, ${lng.toFixed(4)}), Civic Ward`
+                  }));
+                }}
+              />
             </div>
 
             {photoPreview && (
