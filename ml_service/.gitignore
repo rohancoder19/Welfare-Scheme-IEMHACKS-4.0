@@ -1,6 +1,11 @@
+# Secrets
 .env
-.env.*
+
+# Python Cache
 __pycache__/
+*.pyc
+
+# Vector database & test files
 chroma_db/
 models/*.pkl
-*.pyc
+test_*.py
