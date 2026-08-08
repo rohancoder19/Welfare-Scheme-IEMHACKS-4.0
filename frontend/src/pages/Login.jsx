@@ -6,8 +6,8 @@ import { loginAPI } from '../services/authAPI';
 import { Shield, Lock, Mail, ArrowRight, UserCheck } from 'lucide-react';
 
 const Login = ({ message }) => {
-  const [email, setEmail] = useState('ananya@citizen.in');
-  const [password, setPassword] = useState('user123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -34,16 +34,6 @@ const Login = ({ message }) => {
     }
   };
 
-  const setDemoRole = (role) => {
-    if (role === 'Citizen') {
-      setEmail('ananya@citizen.in');
-      setPassword('user123');
-    } else {
-      setEmail('admin@gov.in');
-      setPassword('admin123');
-    }
-  };
-
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full glass-panel rounded-3xl p-8 border border-gray-800 space-y-6 shadow-2xl relative">
@@ -62,35 +52,6 @@ const Login = ({ message }) => {
             {message}
           </div>
         )}
-
-        {/* Quick Demo Selector */}
-        <div className="p-3 rounded-2xl bg-gray-900/90 border border-gray-800 space-y-2">
-          <span className="text-[11px] font-semibold text-gray-400 block uppercase tracking-wider text-center">
-            Quick Demo Login Shortcut:
-          </span>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setDemoRole('Citizen')}
-              className={`py-1.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                email === 'ananya@citizen.in' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-gray-950 text-gray-400 hover:text-white'
-              }`}
-            >
-              <UserCheck className="w-3.5 h-3.5" />
-              Citizen User
-            </button>
-            <button
-              type="button"
-              onClick={() => setDemoRole('Admin')}
-              className={`py-1.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                email === 'admin@gov.in' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-gray-950 text-gray-400 hover:text-white'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" />
-              Admin / Officer
-            </button>
-          </div>
-        </div>
 
         {error && (
           <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium text-center">

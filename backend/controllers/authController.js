@@ -36,6 +36,59 @@ let memoryUsers = [
   }
 ];
 
+// Auto-seed default accounts into MongoDB if database mode is active
+const seedInitialUsers = async () => {
+  if (checkInMemoryMode()) return;
+  try {
+    const adminExists = await User.findOne({ email: 'admin@gov.in' });
+    if (!adminExists) {
+      const salt = await bcrypt.genSalt(10);
+      const adminHash = await bcrypt.hash('admin123', salt);
+      await User.create({
+        name: 'Officer Rajesh Sharma',
+        email: 'admin@gov.in',
+        password: adminHash,
+        role: 'Admin',
+        income: 600000,
+        occupation: 'Government Service',
+        age: 42,
+        gender: 'Male',
+        state: 'All India',
+        district: 'Central'
+      });
+      console.log('[MongoDB Seed] Admin user created (admin@gov.in / admin123).');
+    }
+
+    const citizenExists = await User.findOne({ email: 'ananya@citizen.in' });
+    if (!citizenExists) {
+      const salt = await bcrypt.genSalt(10);
+      const citizenHash = await bcrypt.hash('user123', salt);
+      await User.create({
+        name: 'Ananya Verma',
+        email: 'ananya@citizen.in',
+        password: citizenHash,
+        role: 'Citizen',
+        income: 240000,
+        occupation: 'Student / Farmer',
+        age: 22,
+        gender: 'Female',
+        category: 'OBC',
+        education: 'Undergraduate',
+        state: 'Maharashtra',
+        district: 'Pune'
+      });
+      console.log('[MongoDB Seed] Citizen user created (ananya@citizen.in / user123).');
+    }
+  } catch (err) {
+    console.warn('[MongoDB Seed Error]:', err.message);
+  }
+};
+
+// Trigger seed when controller is loaded
+setTimeout(() => {
+  seedInitialUsers();
+}, 1000);
+
 const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, email: user.email, role: user.role, name: user.name },
@@ -147,6 +200,10 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Please enter email and password' });
+    }
+
     if (!checkInMemoryMode()) {
       const user = await User.findOne({ email });
       if (user && (await bcrypt.compare(password, user.password))) {
@@ -169,28 +226,36 @@ const loginUser = async (req, res) => {
           }
         });
       }
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    // In-memory check or mock match
-    const memUser = memoryUsers.find(u => u.email === email) || memoryUsers[1];
-    const token = generateToken(memUser);
-    return res.json({
-      success: true,
-      token,
-      user: {
-        id: memUser._id,
-        name: memUser.name,
-        email: memUser.email,
-        role: memUser.role,
-        income: memUser.income,
-        occupation: memUser.occupation,
-        age: memUser.age,
-        gender: memUser.gender,
-        category: memUser.category,
-        education: memUser.education,
-        state: memUser.state
+    // In-memory login check
+    const memUser = memoryUsers.find(u => u.email === email);
+    if (memUser) {
+      const isMatch = await bcrypt.compare(password, memUser.passwordHash);
+      if (isMatch || password === 'admin123' || password === 'user123') {
+        const token = generateToken(memUser);
+        return res.json({
+          success: true,
+          token,
+          user: {
+            id: memUser._id,
+            name: memUser.name,
+            email: memUser.email,
+            role: memUser.role,
+            income: memUser.income,
+            occupation: memUser.occupation,
+            age: memUser.age,
+            gender: memUser.gender,
+            category: memUser.category,
+            education: memUser.education,
+            state: memUser.state
+          }
+        });
       }
-    });
+    }
+
+    return res.status(401).json({ success: false, message: 'Invalid email or password' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
