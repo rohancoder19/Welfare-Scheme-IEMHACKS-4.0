@@ -56,7 +56,7 @@ const Home = () => {
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight">
             Empowering Citizens with{' '}
             <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400 bg-clip-text text-transparent">
-              Smart AI Schemes & Urgent Grievance Redressal
+              Smart Schemes & Urgent Grievance Redressal
             </span>
           </h1>
 
