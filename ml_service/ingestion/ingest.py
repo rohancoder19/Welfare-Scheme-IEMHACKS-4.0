@@ -225,14 +225,98 @@ class SchemeIngestionPipeline:
 
         print(f"ChromaDB collection count after PDF ingestion: {self.collection.count()}")
 
+    def ingest_csv_documents(self, csv_filepath: str):
+        """Scan and ingest CSV files containing government scheme details into ChromaDB."""
+        import csv
+        if not os.path.exists(csv_filepath):
+            print(f"CSV file not found: {csv_filepath}")
+            return
+
+        print(f"Ingesting CSV file: {os.path.basename(csv_filepath)} into ChromaDB...")
+        with open(csv_filepath, mode='r', encoding='utf-8', errors='ignore') as f:
+            reader = csv.DictReader(f)
+            count = 0
+            for row in reader:
+                # Normalize key names (lowercase stripped)
+                r = {k.strip().lower(): v.strip() for k, v in row.items() if k}
+                scheme_id = r.get('id') or r.get('_id') or f"csv_{count + 1}"
+                scheme_name = r.get('scheme_name') or r.get('schemename') or r.get('name') or r.get('title') or f"Scheme {count + 1}"
+                category = r.get('category') or r.get('sector') or 'General Welfare'
+                description = r.get('description') or r.get('details') or r.get('overview') or ''
+                benefits = r.get('benefits') or r.get('financial_aid') or r.get('benefit') or ''
+                state = r.get('state') or r.get('region') or 'All India'
+                deadline = r.get('deadline') or r.get('last_date') or 'Active Year-round'
+                app_url = r.get('application_url') or r.get('url') or r.get('link') or ''
+                
+                try:
+                    max_income = float(r.get('max_income') or r.get('maxincome') or r.get('income_limit') or 1000000)
+                except ValueError:
+                    max_income = 1000000.0
+
+                try:
+                    min_age = float(r.get('min_age') or r.get('minage') or 0)
+                except ValueError:
+                    min_age = 0.0
+
+                try:
+                    max_age = float(r.get('max_age') or r.get('maxage') or 100)
+                except ValueError:
+                    max_age = 100.0
+
+                gender = r.get('gender') or r.get('target_gender') or 'All'
+                occupation = r.get('occupation') or r.get('trade') or 'All'
+                social_cat = r.get('social_category') or r.get('category_quota') or r.get('caste') or 'All'
+
+                full_text = f"Scheme Name: {scheme_name}\nCategory: {category}\nState: {state}\nDescription: {description}\nBenefits: {benefits}\nIncome Ceiling: ₹{max_income:,.0f}\nTarget Age: {min_age}-{max_age} years\nTarget Gender: {gender}\nTarget Occupation: {occupation}\nTarget Category: {social_cat}\nDeadline: {deadline}"
+
+                chunks = chunk_text(full_text, chunk_size=500, overlap=50)
+                if not chunks:
+                    chunks = [full_text]
+
+                for idx, chunk in enumerate(chunks):
+                    doc_id = f"{scheme_id}_chunk_{idx}"
+                    embedding = generate_embedding(chunk)
+
+                    metadata = {
+                        "scheme_id": str(scheme_id),
+                        "scheme_name": scheme_name,
+                        "category": category,
+                        "description": description,
+                        "benefits": benefits,
+                        "state": state,
+                        "deadline": deadline,
+                        "application_url": app_url,
+                        "max_income": max_income,
+                        "min_age": min_age,
+                        "max_age": max_age,
+                        "gender": gender,
+                        "occupation": occupation,
+                        "social_category": social_cat
+                    }
+
+                    self.collection.upsert(
+                        ids=[doc_id],
+                        embeddings=[embedding],
+                        documents=[chunk],
+                        metadatas=[metadata]
+                    )
+                count += 1
+
+        print(f"Successfully ingested {count} schemes from CSV. Total ChromaDB count: {self.collection.count()}")
+
 def run_ingestion():
     pipeline = SchemeIngestionPipeline()
     # 1. Ingest structured schemes JSON
     json_path = os.path.join(DOCUMENTS_DIR, "sample_schemes.json")
     if os.path.exists(json_path):
         pipeline.ingest_structured_json(json_path)
-    
-    # 2. Ingest any PDF scheme documents
+
+    # 2. Ingest CSV scheme documents
+    csv_files = glob.glob(os.path.join(DOCUMENTS_DIR, "*.csv"))
+    for csv_file in csv_files:
+        pipeline.ingest_csv_documents(csv_file)
+
+    # 3. Ingest any PDF scheme documents
     pipeline.ingest_pdf_documents(DOCUMENTS_DIR)
 
 if __name__ == "__main__":
