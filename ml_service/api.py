@@ -49,9 +49,12 @@ class SchemeRecommendationRequest(BaseModel):
     schemes: Optional[List[Dict[str, Any]]] = []
 
 class ComplaintAnalysisRequest(BaseModel):
-    title: str
-    description: str
+    title: Optional[str] = ""
+    description: Optional[str] = ""
+    complaintText: Optional[str] = None
     category: Optional[str] = "Other"
+    existingCategory: Optional[str] = None
+    location: Optional[str] = None
 
 class ChatRequest(BaseModel):
     message: str
@@ -82,18 +85,31 @@ def predict_eligibility(req: SchemeRecommendationRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/analyze-complaint")
+@app.post("/api/ai/analyze-complaint")
 @app.post("/classify-complaint")
 @app.post("/predict-priority")
 def analyze_complaint(req: ComplaintAnalysisRequest):
     try:
-        combined_text = f"{req.title} {req.description}"
+        raw_text = req.complaintText or f"{req.title} {req.description}".strip()
+        cat = req.existingCategory or req.category or "Other"
         analysis = complaint_classifier.classify_and_predict_priority(
-            text=combined_text,
-            user_category=req.category
+            text=raw_text,
+            user_category=cat,
+            location=req.location
         )
         return {
             "success": True,
-            "analysis": analysis
+            "analysis": analysis,
+            "category": analysis.get("category"),
+            "subcategory": analysis.get("subcategory"),
+            "priority": analysis.get("priority"),
+            "urgencyScore": analysis.get("urgencyScore"),
+            "department": analysis.get("department"),
+            "confidence": analysis.get("confidence"),
+            "recommendedSLAHours": analysis.get("recommendedSLAHours"),
+            "recommendedAction": analysis.get("recommendedAction"),
+            "reason": analysis.get("reason")
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

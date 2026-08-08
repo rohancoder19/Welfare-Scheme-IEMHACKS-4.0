@@ -45,3 +45,16 @@ export const fetchAdminAnalyticsAPI = async (token) => {
   });
   return response.data;
 };
+
+export const analyzeComplaintAPI = async (payload) => {
+  const response = await axios.post('/api/ai/analyze-complaint', payload);
+  return response.data;
+};
+
+export const overrideAIDecisionAPI = async (id, decisionData, token) => {
+  const response = await axios.put(`/api/admin/complaints/${id}/decision`, decisionData, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+

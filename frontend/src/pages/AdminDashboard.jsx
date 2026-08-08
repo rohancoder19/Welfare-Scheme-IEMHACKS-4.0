@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { fetchAdminComplaintsAPI, updateComplaintStatusAPI, fetchAdminAnalyticsAPI } from '../services/complaintAPI';
+import { fetchAdminComplaintsAPI, updateComplaintStatusAPI, fetchAdminAnalyticsAPI, overrideAIDecisionAPI } from '../services/complaintAPI';
 import Maps from '../components/Maps';
-import { Shield, AlertTriangle, CheckCircle, Clock, Users, FileText, Search, UserCheck, ArrowRight, BarChart3, Filter } from 'lucide-react';
+import { 
+  Shield, AlertTriangle, CheckCircle, Clock, Users, FileText, Search, UserCheck, 
+  ArrowRight, BarChart3, Filter, Sparkles, CheckCircle2, AlertOctagon, SlidersHorizontal, Timer, Cpu
+} from 'lucide-react';
 
 const AdminDashboard = () => {
   const { token, user } = useSelector((state) => state.auth);
@@ -13,10 +16,21 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [loading, setLoading] = useState(true);
 
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+
+  // Status update modal
   const [editingComplaint, setEditingComplaint] = useState(null);
   const [statusInput, setStatusInput] = useState('In Progress');
   const [remarksInput, setRemarksInput] = useState('');
-  const [officerInput, setOfficerInput] = useState('Officer Ramesh Kumar');
+  const [officerInput, setOfficerInput] = useState('Officer Rajesh Sharma');
+
+  // Override AI modal
+  const [overrideModalComplaint, setOverrideModalComplaint] = useState(null);
+  const [overrideCategory, setOverrideCategory] = useState('Sanitation');
+  const [overridePriority, setOverridePriority] = useState('HIGH');
+  const [overrideDepartment, setOverrideDepartment] = useState('Municipal Sanitation');
+  const [overrideSLA, setOverrideSLA] = useState(48);
+  const [overrideReason, setOverrideReason] = useState('');
 
   const loadAdminData = async () => {
     setLoading(true);
@@ -26,7 +40,15 @@ const AdminDashboard = () => {
       if (statusFilter !== 'All') filters.status = statusFilter;
 
       const cRes = await fetchAdminComplaintsAPI(filters, token);
-      if (cRes.success) setComplaints(cRes.complaints);
+      if (cRes.success) {
+        setComplaints(cRes.complaints);
+        if (cRes.complaints.length > 0 && !selectedComplaint) {
+          setSelectedComplaint(cRes.complaints[0]);
+        } else if (selectedComplaint) {
+          const updated = cRes.complaints.find(c => (c._id || c.id) === (selectedComplaint._id || selectedComplaint.id));
+          if (updated) setSelectedComplaint(updated);
+        }
+      }
 
       const aRes = await fetchAdminAnalyticsAPI(token);
       if (aRes.success) setAnalytics(aRes.analytics);
@@ -48,7 +70,12 @@ const AdminDashboard = () => {
     try {
       const res = await updateComplaintStatusAPI(
         editingComplaint._id || editingComplaint.id,
-        { status: statusInput, remarks: remarksInput, assignedOfficer: officerInput },
+        { 
+          status: statusInput, 
+          remarks: remarksInput, 
+          assignedOfficer: officerInput,
+          department: editingComplaint.finalDecision?.department || editingComplaint.aiAnalysis?.department || 'Municipal Department'
+        },
         token
       );
 
@@ -62,6 +89,80 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleAcceptAI = async (cmp) => {
+    try {
+      const payload = {
+        category: cmp.aiAnalysis?.category || cmp.category,
+        priority: cmp.aiAnalysis?.priority || cmp.priority,
+        department: cmp.aiAnalysis?.department || cmp.assignedOfficer,
+        slaHours: cmp.aiAnalysis?.recommendedSLAHours || 48,
+        reason: 'Accepted AI Triage Recommendation'
+      };
+
+      const res = await overrideAIDecisionAPI(cmp._id || cmp.id, payload, token);
+      if (res.success) {
+        loadAdminData();
+      }
+    } catch (err) {
+      console.error('Accept AI error:', err);
+    }
+  };
+
+  const handleOpenOverrideModal = (cmp) => {
+    setOverrideModalComplaint(cmp);
+    setOverrideCategory(cmp.finalDecision?.category || cmp.aiAnalysis?.category || cmp.category || 'Sanitation');
+    setOverridePriority((cmp.finalDecision?.priority || cmp.aiAnalysis?.priority || cmp.priority || 'HIGH').toUpperCase());
+    setOverrideDepartment(cmp.finalDecision?.department || cmp.aiAnalysis?.department || cmp.assignedOfficer || 'Municipal Sanitation');
+    setOverrideSLA(cmp.finalDecision?.slaHours || cmp.aiAnalysis?.recommendedSLAHours || 48);
+    setOverrideReason('');
+  };
+
+  const handleSaveOverride = async (e) => {
+    e.preventDefault();
+    if (!overrideModalComplaint) return;
+
+    try {
+      const payload = {
+        category: overrideCategory,
+        priority: overridePriority,
+        department: overrideDepartment,
+        slaHours: Number(overrideSLA),
+        reason: overrideReason
+      };
+
+      const res = await overrideAIDecisionAPI(overrideModalComplaint._id || overrideModalComplaint.id, payload, token);
+      if (res.success) {
+        setOverrideModalComplaint(null);
+        loadAdminData();
+      }
+    } catch (err) {
+      console.error('Override decision error:', err);
+    }
+  };
+
+  // Helper for SLA calculation
+  const getSLAStatus = (cmp) => {
+    if (cmp.status === 'Resolved') return { text: 'Resolved', isBreached: false };
+    if (!cmp.slaDeadline) return { text: '48h SLA', isBreached: false };
+
+    const now = Date.now();
+    const deadline = new Date(cmp.slaDeadline).getTime();
+    const diffMs = deadline - now;
+
+    if (diffMs <= 0) {
+      return { text: '⚠ SLA BREACHED', isBreached: true };
+    }
+    const hours = Math.floor(diffMs / (3600 * 1000));
+    const mins = Math.floor((diffMs % (3600 * 1000)) / (60 * 1000));
+    return { text: `⏱ ${hours}h ${mins}m remaining`, isBreached: false };
+  };
+
+  // Count Priority Queue stats
+  const criticalCount = complaints.filter(c => c.priority?.toUpperCase() === 'CRITICAL').length;
+  const highCount = complaints.filter(c => c.priority?.toUpperCase() === 'HIGH' || c.priority === 'High').length;
+  const mediumCount = complaints.filter(c => c.priority?.toUpperCase() === 'MEDIUM' || c.priority === 'Medium').length;
+  const lowCount = complaints.filter(c => c.priority?.toUpperCase() === 'LOW' || c.priority === 'Low').length;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       
@@ -69,35 +170,241 @@ const AdminDashboard = () => {
       <div className="glass-panel rounded-3xl p-8 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-semibold uppercase tracking-wider border border-amber-500/20 mb-2">
-            <Shield className="w-3.5 h-3.5" />
-            ADMINISTRATIVE OFFICER COMMAND CENTER
+            <Cpu className="w-3.5 h-3.5" />
+            AI GRIEVANCE INTELLIGENCE SYSTEM & COMMAND CENTER
           </div>
-          <h1 className="text-3xl font-extrabold text-white">Grievance Triage & Operational Dashboard</h1>
-          <p className="text-sm text-gray-400 mt-1">Review AI priority ratings, assign department officers, and update resolution logs.</p>
+          <h1 className="text-3xl font-extrabold text-white">Smart Priority Queue & Operational Triage</h1>
+          <p className="text-sm text-gray-400 mt-1">Review AI urgency scores, conduct Human-in-the-Loop overrides, track SLA countdowns, and dispatch field units.</p>
         </div>
       </div>
 
-      {/* Analytics KPI Row */}
-      {analytics && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="glass-panel p-5 rounded-2xl border border-gray-800 space-y-1">
-            <span className="text-xs text-gray-400 font-semibold block uppercase">Total Grievances</span>
-            <span className="text-3xl font-black text-white font-mono">{analytics.totalComplaints}</span>
+      {/* Smart Priority Queue Counter Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div 
+          onClick={() => setPriorityFilter('CRITICAL')}
+          className={`glass-panel p-5 rounded-2xl border cursor-pointer transition-all ${
+            priorityFilter === 'CRITICAL' ? 'ring-2 ring-red-500 bg-red-500/10 border-red-500/50' : 'border-red-500/30 hover:border-red-500/60'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-red-400 uppercase tracking-wider">🔴 CRITICAL</span>
+            <AlertOctagon className="w-4 h-4 text-red-400 animate-pulse" />
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-3xl font-black text-red-400 font-mono">{criticalCount}</span>
+            <span className="text-[11px] text-gray-400">Immediate Action</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setPriorityFilter('HIGH')}
+          className={`glass-panel p-5 rounded-2xl border cursor-pointer transition-all ${
+            priorityFilter === 'HIGH' ? 'ring-2 ring-rose-500 bg-rose-500/10 border-rose-500/50' : 'border-rose-500/30 hover:border-rose-500/60'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">🟠 HIGH</span>
+            <AlertTriangle className="w-4 h-4 text-rose-400" />
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-3xl font-black text-rose-400 font-mono">{highCount}</span>
+            <span className="text-[11px] text-gray-400">High Urgency</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setPriorityFilter('MEDIUM')}
+          className={`glass-panel p-5 rounded-2xl border cursor-pointer transition-all ${
+            priorityFilter === 'MEDIUM' ? 'ring-2 ring-amber-400 bg-amber-400/10 border-amber-400/50' : 'border-amber-400/30 hover:border-amber-400/60'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">🟡 MEDIUM</span>
+            <Clock className="w-4 h-4 text-amber-400" />
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-3xl font-black text-amber-400 font-mono">{mediumCount}</span>
+            <span className="text-[11px] text-gray-400">Standard Queue</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setPriorityFilter('LOW')}
+          className={`glass-panel p-5 rounded-2xl border cursor-pointer transition-all ${
+            priorityFilter === 'LOW' ? 'ring-2 ring-emerald-400 bg-emerald-400/10 border-emerald-400/50' : 'border-emerald-400/30 hover:border-emerald-400/60'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">🟢 LOW</span>
+            <CheckCircle className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-3xl font-black text-emerald-400 font-mono">{lowCount}</span>
+            <span className="text-[11px] text-gray-400">Routine Maintenance</span>
+          </div>
+        </div>
+      </div>
+
+      {/* AI GRIEVANCE INTELLIGENCE CARD SECTION */}
+      {selectedComplaint && (
+        <div className="glass-panel rounded-3xl p-8 border border-sky-500/30 space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-sky-400 tracking-wider uppercase font-mono">AI GRIEVANCE ANALYSIS & AUDIT CENTER</h3>
+                <p className="text-base font-extrabold text-white truncate max-w-xl">{selectedComplaint.title}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {selectedComplaint.finalDecision?.overridden ? (
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  ⚡ Human Overridden ({selectedComplaint.finalDecision.decidedBy})
+                </span>
+              ) : (
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                  🤖 AI Automated Triage
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl border border-rose-500/30 glow-rose space-y-1">
-            <span className="text-xs text-rose-400 font-semibold block uppercase">High Priority Urgency</span>
-            <span className="text-3xl font-black text-rose-400 font-mono">{analytics.highPriorityCount}</span>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Left AI Detection Attributes */}
+            <div className="glass-panel p-5 rounded-2xl border border-gray-800 space-y-4">
+              <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider">Classification Attributes</h4>
+              
+              <div className="space-y-3 text-xs">
+                <div className="flex justify-between py-1 border-b border-gray-800/80">
+                  <span className="text-gray-400">Category:</span>
+                  <span className="font-bold text-white">{selectedComplaint.aiAnalysis?.category || selectedComplaint.category}</span>
+                </div>
 
-          <div className="glass-panel p-5 rounded-2xl border border-gray-800 space-y-1">
-            <span className="text-xs text-amber-400 font-semibold block uppercase font-mono">Resolution Rate</span>
-            <span className="text-3xl font-black text-emerald-400 font-mono">{analytics.resolutionRate}%</span>
-          </div>
+                <div className="flex justify-between py-1 border-b border-gray-800/80">
+                  <span className="text-gray-400">Subcategory:</span>
+                  <span className="font-bold text-sky-300">{selectedComplaint.aiAnalysis?.subcategory || 'General'}</span>
+                </div>
 
-          <div className="glass-panel p-5 rounded-2xl border border-gray-800 space-y-1">
-            <span className="text-xs text-sky-400 font-semibold block uppercase font-mono">Assisted Citizens</span>
-            <span className="text-3xl font-black text-sky-400 font-mono">{analytics.totalCitizensAssisted}</span>
+                <div className="flex justify-between py-1 border-b border-gray-800/80">
+                  <span className="text-gray-400">AI Priority:</span>
+                  <span className={`font-mono font-bold px-2 py-0.5 rounded ${
+                    (selectedComplaint.priority || '').toUpperCase() === 'CRITICAL' ? 'bg-red-500/20 text-red-400' :
+                    (selectedComplaint.priority || '').toUpperCase() === 'HIGH' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
+                  }`}>
+                    🔴 {selectedComplaint.priority}
+                  </span>
+                </div>
+
+                <div className="py-1 border-b border-gray-800/80 space-y-1">
+                  <div className="flex justify-between text-gray-400">
+                    <span>Urgency Score:</span>
+                    <span className="font-mono font-bold text-amber-400">
+                      {selectedComplaint.aiAnalysis?.urgencyScore || selectedComplaint.priorityScore || 87}/100
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-gray-900 overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full"
+                      style={{ width: `${selectedComplaint.aiAnalysis?.urgencyScore || selectedComplaint.priorityScore || 87}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between py-1 border-b border-gray-800/80">
+                  <span className="text-gray-400">Confidence Score:</span>
+                  <span className="font-bold font-mono text-emerald-400">
+                    {Math.round((selectedComplaint.aiAnalysis?.confidence || 0.94) * 100)}%
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1 border-b border-gray-800/80">
+                  <span className="text-gray-400">Recommended SLA:</span>
+                  <span className="font-bold font-mono text-sky-400">
+                    {selectedComplaint.aiAnalysis?.recommendedSLAHours || selectedComplaint.slaHours || 48} hours
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-400">Recommended Dept:</span>
+                  <span className="font-bold text-gray-200 truncate max-w-[160px]">
+                    {selectedComplaint.aiAnalysis?.department || selectedComplaint.assignedOfficer}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Center AI Recommendation & Explanations */}
+            <div className="glass-panel p-5 rounded-2xl border border-gray-800 space-y-4 lg:col-span-2 flex flex-col justify-between">
+              
+              <div className="space-y-4">
+                <div>
+                  <span className="text-xs font-bold uppercase text-amber-400 block mb-1">AI Recommendation:</span>
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs font-medium text-amber-200">
+                    {selectedComplaint.aiAnalysis?.recommendedAction || 'Immediate municipal inspection and field unit dispatch'}
+                  </div>
+                </div>
+
+                {/* AI Explanation List */}
+                <div>
+                  <span className="text-xs font-bold uppercase text-gray-400 block mb-2">
+                    Why {selectedComplaint.priority} Priority? (AI Reason Breakdown)
+                  </span>
+                  
+                  <div className="space-y-1.5 bg-gray-950 p-4 rounded-2xl border border-gray-800 text-xs text-gray-300">
+                    {(selectedComplaint.aiAnalysis?.reason && selectedComplaint.aiAnalysis.reason.length > 0) ? (
+                      selectedComplaint.aiAnalysis.reason.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span>{item}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span>Public sanitation and infrastructure safety issue</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span>Reported unresolved for multi-day period</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span>Potential public health & citizen inconvenience impact</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons for Accept AI or Human Override */}
+              <div className="pt-4 border-t border-gray-800 flex flex-wrap items-center justify-end gap-3">
+                <button
+                  onClick={() => handleAcceptAI(selectedComplaint)}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Accept AI Triage
+                </button>
+
+                <button
+                  onClick={() => handleOpenOverrideModal(selectedComplaint)}
+                  className="px-5 py-2.5 rounded-xl bg-gray-900 border border-gray-700 text-amber-300 hover:text-white font-bold text-xs flex items-center gap-2"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Override Classification
+                </button>
+              </div>
+
+            </div>
+
           </div>
         </div>
       )}
@@ -108,18 +415,21 @@ const AdminDashboard = () => {
           <BarChart3 className="w-4 h-4 text-amber-400" />
           Spatial Distribution of Grievance Pins
         </h3>
-        <Maps complaints={complaints} height="360px" />
+        <Maps complaints={complaints} height="320px" />
       </div>
 
-      {/* Complaints Table & Controls */}
+      {/* Smart Priority Dispatch Queue Table */}
       <div className="glass-panel rounded-3xl p-8 border border-gray-800 space-y-6">
         
-        {/* Filters */}
+        {/* Table Filters Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-800 pb-6">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <Filter className="w-5 h-5 text-emerald-400" />
-            Grievance Dispatch Queue
-          </h3>
+          <div>
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <Filter className="w-5 h-5 text-emerald-400" />
+              Smart Priority Dispatch Queue
+            </h3>
+            <p className="text-xs text-gray-400 mt-1">Sorted by Priority level ➔ Urgency score ➔ SLA deadline remaining ➔ Complaint age.</p>
+          </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <div>
@@ -130,9 +440,10 @@ const AdminDashboard = () => {
                 className="bg-gray-950 border border-gray-800 rounded-xl px-3 py-1.5 text-xs text-white"
               >
                 <option value="All">All Priorities</option>
-                <option value="High">High Urgency</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
+                <option value="CRITICAL">🔴 CRITICAL</option>
+                <option value="HIGH">🟠 HIGH</option>
+                <option value="MEDIUM">🟡 MEDIUM</option>
+                <option value="LOW">🟢 LOW</option>
               </select>
             </div>
 
@@ -161,55 +472,201 @@ const AdminDashboard = () => {
                 <th className="p-3.5">Grievance Title</th>
                 <th className="p-3.5">Category</th>
                 <th className="p-3.5">AI Priority</th>
+                <th className="p-3.5">SLA Countdown</th>
                 <th className="p-3.5">Status</th>
                 <th className="p-3.5">Assigned Officer</th>
                 <th className="p-3.5">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800/80">
-              {complaints.map((cmp) => (
-                <tr key={cmp._id || cmp.id} className="hover:bg-gray-900/50 transition-colors">
-                  <td className="p-3.5 font-semibold text-white max-w-xs truncate">{cmp.title}</td>
-                  <td className="p-3.5">{cmp.category}</td>
-                  <td className="p-3.5">
-                    <span className={`px-2.5 py-0.5 rounded font-bold font-mono ${
-                      cmp.priority === 'High' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
-                    }`}>
-                      {cmp.priority} ({cmp.priorityScore}%)
-                    </span>
-                  </td>
-                  <td className="p-3.5">
-                    <span className="px-2.5 py-0.5 rounded font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      {cmp.status}
-                    </span>
-                  </td>
-                  <td className="p-3.5 font-medium text-gray-200">{cmp.assignedOfficer}</td>
-                  <td className="p-3.5">
-                    <button
-                      onClick={() => {
-                        setEditingComplaint(cmp);
-                        const nextStatusMap = {
-                          'Submitted': 'Under Review',
-                          'Under Review': 'In Progress',
-                          'In Progress': 'Resolved',
-                          'Resolved': 'Resolved',
-                          'Rejected': 'Rejected'
-                        };
-                        setStatusInput(nextStatusMap[cmp.status] || 'Under Review');
-                        setOfficerInput(cmp.assignedOfficer || 'District Ward Officer');
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold"
-                    >
-                      Update Status
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {complaints.map((cmp) => {
+                const sla = getSLAStatus(cmp);
+                const isSelected = selectedComplaint && (selectedComplaint._id || selectedComplaint.id) === (cmp._id || cmp.id);
+                const normP = (cmp.priority || 'MEDIUM').toUpperCase();
+
+                return (
+                  <tr 
+                    key={cmp._id || cmp.id} 
+                    onClick={() => setSelectedComplaint(cmp)}
+                    className={`cursor-pointer transition-colors ${
+                      isSelected ? 'bg-sky-500/10 border-l-4 border-l-sky-400' : 'hover:bg-gray-900/50'
+                    }`}
+                  >
+                    <td className="p-3.5 font-semibold text-white max-w-xs truncate">{cmp.title}</td>
+                    <td className="p-3.5">{cmp.category}</td>
+                    <td className="p-3.5">
+                      <span className={`px-2.5 py-0.5 rounded font-bold font-mono ${
+                        normP === 'CRITICAL' ? 'bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse' :
+                        normP === 'HIGH' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                        normP === 'MEDIUM' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400'
+                      }`}>
+                        {normP === 'CRITICAL' && '🔴 '}
+                        {normP === 'HIGH' && '🟠 '}
+                        {normP === 'MEDIUM' && '🟡 '}
+                        {normP === 'LOW' && '🟢 '}
+                        {normP} ({cmp.aiAnalysis?.urgencyScore || cmp.priorityScore || 50}/100)
+                      </span>
+                    </td>
+                    <td className="p-3.5 font-mono">
+                      <span className={`px-2.5 py-0.5 rounded font-bold ${
+                        sla.isBreached ? 'bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse' : 'text-amber-300'
+                      }`}>
+                        {sla.text}
+                      </span>
+                    </td>
+                    <td className="p-3.5">
+                      <span className="px-2.5 py-0.5 rounded font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        {cmp.status}
+                      </span>
+                    </td>
+                    <td className="p-3.5 font-medium text-gray-200 max-w-[160px] truncate">{cmp.assignedOfficer}</td>
+                    <td className="p-3.5 flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedComplaint(cmp);
+                        }}
+                        className="px-2.5 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-semibold"
+                      >
+                        AI Analysis
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingComplaint(cmp);
+                          const nextStatusMap = {
+                            'Submitted': 'Under Review',
+                            'Under Review': 'In Progress',
+                            'In Progress': 'Resolved',
+                            'Resolved': 'Resolved',
+                            'Rejected': 'Rejected'
+                          };
+                          setStatusInput(nextStatusMap[cmp.status] || 'Under Review');
+                          setOfficerInput(cmp.assignedOfficer || 'District Ward Officer');
+                        }}
+                        className="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold"
+                      >
+                        Update Status
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
       </div>
+
+      {/* Human-in-the-Loop Override Modal */}
+      {overrideModalComplaint && (
+        <div className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="max-w-lg w-full glass-panel rounded-3xl p-6 border border-gray-800 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-amber-400" />
+                  Human-in-the-Loop AI Override
+                </h3>
+                <p className="text-xs text-gray-400 truncate max-w-sm">{overrideModalComplaint.title}</p>
+              </div>
+              <button 
+                onClick={() => setOverrideModalComplaint(null)} 
+                className="text-gray-400 hover:text-white font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveOverride} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1">Final Category</label>
+                <select
+                  value={overrideCategory}
+                  onChange={(e) => setOverrideCategory(e.target.value)}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white"
+                >
+                  <option value="Sanitation">Sanitation</option>
+                  <option value="Road">Road</option>
+                  <option value="Water">Water</option>
+                  <option value="Electricity">Electricity</option>
+                  <option value="Crime">Crime</option>
+                  <option value="Women Safety">Women Safety</option>
+                  <option value="Corruption">Corruption</option>
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="Education">Education</option>
+                  <option value="General Public Service">General Public Service</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1">Final Priority</label>
+                <select
+                  value={overridePriority}
+                  onChange={(e) => setOverridePriority(e.target.value)}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold"
+                >
+                  <option value="CRITICAL">🔴 CRITICAL (12h SLA)</option>
+                  <option value="HIGH">🟠 HIGH (24h - 48h SLA)</option>
+                  <option value="MEDIUM">🟡 MEDIUM (72h SLA)</option>
+                  <option value="LOW">🟢 LOW (120h SLA)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1">Assign Responsible Department</label>
+                <input
+                  type="text"
+                  required
+                  value={overrideDepartment}
+                  onChange={(e) => setOverrideDepartment(e.target.value)}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1">Final Resolution SLA (Hours)</label>
+                <input
+                  type="number"
+                  required
+                  value={overrideSLA}
+                  onChange={(e) => setOverrideSLA(e.target.value)}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-300 mb-1">Officer Justification / Override Notes</label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="e.g. Proximity to hospital mandates emergency escalation beyond initial automated score..."
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setOverrideModalComplaint(null)}
+                  className="px-4 py-2 rounded-xl bg-gray-900 text-gray-300 text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 font-extrabold text-xs"
+                >
+                  Save Human Override Decision
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Edit Status Modal */}
       {editingComplaint && (
@@ -281,3 +738,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

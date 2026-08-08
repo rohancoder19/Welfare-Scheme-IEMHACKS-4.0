@@ -20,7 +20,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 // Connect to Database
 connectDB();
 
+const { analyzeComplaintText } = require('./controllers/complaintController');
+
 // API Routes
+app.post('/api/ai/analyze-complaint', analyzeComplaintText);
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/schemes', require('./routes/schemeRoutes'));
 app.use('/api/complaints', require('./routes/complaintRoutes'));

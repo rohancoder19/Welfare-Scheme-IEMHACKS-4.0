@@ -20,12 +20,35 @@ const complaintSchema = new mongoose.Schema({
   },
   priority: { 
     type: String, 
-    enum: ['High', 'Medium', 'Low'], 
-    default: 'Medium' 
+    enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'High', 'Medium', 'Low'], 
+    default: 'MEDIUM' 
   },
   priorityScore: { type: Number, default: 50 },
   assignedOfficer: { type: String, default: 'Unassigned (Automated Triage)' },
   nlpAnalysis: { type: String, default: '' },
+  aiAnalysis: {
+    category: { type: String },
+    subcategory: { type: String },
+    priority: { type: String },
+    urgencyScore: { type: Number },
+    department: { type: String },
+    confidence: { type: Number },
+    recommendedSLAHours: { type: Number },
+    recommendedAction: { type: String },
+    reason: [{ type: String }],
+    analyzedAt: { type: Date, default: Date.now }
+  },
+  finalDecision: {
+    category: { type: String },
+    priority: { type: String },
+    department: { type: String },
+    slaHours: { type: Number },
+    overridden: { type: Boolean, default: false },
+    decidedBy: { type: String },
+    decidedAt: { type: Date }
+  },
+  slaDeadline: { type: Date },
+  slaHours: { type: Number, default: 48 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

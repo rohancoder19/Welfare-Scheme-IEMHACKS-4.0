@@ -94,36 +94,67 @@ const Complaint = () => {
       </div>
 
       {successComplaint ? (
-        <div className="glass-panel rounded-3xl p-10 border border-emerald-500/30 text-center max-w-2xl mx-auto space-y-6">
+        <div className="glass-panel rounded-3xl p-10 border border-emerald-500/30 max-w-3xl mx-auto space-y-6 shadow-2xl">
           <div className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mx-auto flex items-center justify-center glow-emerald">
             <CheckCircle2 className="w-10 h-10" />
           </div>
 
-          <h2 className="text-3xl font-extrabold text-white">Grievance Registered Successfully!</h2>
+          <div className="text-center space-y-1">
+            <h2 className="text-3xl font-extrabold text-white">Grievance Registered Successfully!</h2>
+            <p className="text-xs text-gray-400">AI Grievance Intelligence System has categorized & prioritized your issue.</p>
+          </div>
 
-          <div className="p-6 rounded-2xl bg-gray-900 border border-gray-800 space-y-3 text-left">
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-gray-400">Complaint ID:</span>
+          <div className="p-6 rounded-2xl bg-gray-900 border border-gray-800 space-y-4 text-left text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-800 font-mono">
+              <span className="text-gray-400">Grievance Ref ID:</span>
               <span className="text-emerald-400 font-bold">{successComplaint._id}</span>
             </div>
 
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-gray-400">AI Priority Prediction:</span>
-              <span className={`px-2.5 py-0.5 rounded font-bold ${
-                successComplaint.priority === 'High' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
-              }`}>
-                {successComplaint.priority} Priority ({successComplaint.priorityScore}% Urgency)
+            <div className="grid grid-cols-2 gap-4 pb-3 border-b border-gray-800 font-mono">
+              <div>
+                <span className="text-gray-400 block mb-1">AI Detected Category:</span>
+                <span className="text-white font-bold">{successComplaint.aiAnalysis?.category || successComplaint.category}</span>
+                <span className="text-sky-300 block text-[11px] font-normal">Sub: {successComplaint.aiAnalysis?.subcategory || 'General'}</span>
+              </div>
+              <div>
+                <span className="text-gray-400 block mb-1">AI Urgency Priority:</span>
+                <span className={`px-2.5 py-0.5 rounded font-bold inline-block ${
+                  (successComplaint.priority || '').toUpperCase() === 'CRITICAL' ? 'bg-red-500/20 text-red-400' :
+                  (successComplaint.priority || '').toUpperCase() === 'HIGH' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
+                }`}>
+                  {successComplaint.priority} Priority ({successComplaint.aiAnalysis?.urgencyScore || successComplaint.priorityScore || 85}/100 Urgency)
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pb-3 border-b border-gray-800">
+              <div>
+                <span className="text-gray-400 block mb-1">Recommended Department:</span>
+                <span className="text-emerald-300 font-bold">{successComplaint.aiAnalysis?.department || successComplaint.assignedOfficer}</span>
+              </div>
+              <div>
+                <span className="text-gray-400 block mb-1">Target Resolution SLA:</span>
+                <span className="text-sky-400 font-bold font-mono">{successComplaint.aiAnalysis?.recommendedSLAHours || successComplaint.slaHours || 48} Hours</span>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <span className="font-bold text-amber-400 block flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                AI Priority Reasoning:
               </span>
-            </div>
-
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-gray-400">Assigned Officer:</span>
-              <span className="text-gray-200 font-semibold">{successComplaint.assignedOfficer}</span>
-            </div>
-
-            <div className="pt-2 border-t border-gray-800 text-xs text-gray-300">
-              <span className="font-semibold text-amber-400 block mb-1">AI NLP Analysis Note:</span>
-              <p className="italic text-gray-400">{successComplaint.nlpAnalysis}</p>
+              <div className="bg-gray-950 p-3 rounded-xl border border-gray-800 space-y-1 text-gray-300">
+                {(successComplaint.aiAnalysis?.reason && successComplaint.aiAnalysis.reason.length > 0) ? (
+                  successComplaint.aiAnalysis.reason.map((r, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>{r}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="italic text-gray-400">{successComplaint.nlpAnalysis}</p>
+                )}
+              </div>
             </div>
           </div>
 
