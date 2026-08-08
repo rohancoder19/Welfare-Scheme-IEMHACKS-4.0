@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Crosshair, Navigation } from 'lucide-react';
 
 // Custom SVG Icons for 100% reliable rendering without external CDN PNG dependencies
 const createCustomIcon = (colorHex, symbol = '') => {
@@ -33,6 +34,20 @@ const createCustomIcon = (colorHex, symbol = '') => {
   });
 };
 
+// Real-time GPS Pulsing Marker Icon
+const gpsPulseIcon = L.divIcon({
+  className: 'gps-pulse-marker',
+  html: `
+    <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+      <div style="position: absolute; width: 36px; height: 36px; background-color: rgba(14, 165, 233, 0.4); border-radius: 50%; animation: pulse 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+      <div style="width: 20px; height: 20px; background-color: #0ea5e9; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 0 12px rgba(14, 165, 233, 0.9);"></div>
+    </div>
+  `,
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+  popupAnchor: [0, -18]
+});
+
 const defaultIcon = createCustomIcon('#3b82f6');
 const criticalIcon = createCustomIcon('#ef4444');
 const highIcon = createCustomIcon('#f43f5e');
@@ -52,19 +67,20 @@ const getMarkerIcon = (priority) => {
 const defaultCenter = [18.5204, 73.8567]; // Pune default coordinates
 
 // Map Controller for auto-resizing and recentering
-function MapController({ center }) {
+function MapController({ center, userGpsPos }) {
   const map = useMap();
   useEffect(() => {
     if (map) {
       const timer = setTimeout(() => {
         map.invalidateSize();
       }, 200);
-      if (center && center[0] && center[1]) {
-        map.setView(center, map.getZoom(), { animate: true });
+      const targetCenter = userGpsPos || center;
+      if (targetCenter && targetCenter[0] && targetCenter[1]) {
+        map.setView(targetCenter, map.getZoom(), { animate: true });
       }
       return () => clearTimeout(timer);
     }
-  }, [center, map]);
+  }, [center, userGpsPos, map]);
   return null;
 }
 
@@ -99,26 +115,92 @@ const Maps = ({
   height = '400px', 
   center = defaultCenter, 
   onSelectLocation = null,
-  initialSelectedPos = null
+  initialSelectedPos = null,
+  showGpsButton = true
 }) => {
   const [selectedPos, setSelectedPos] = useState(initialSelectedPos);
+  const [userGpsPos, setUserGpsPos] = useState(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
-  const mapCenter = (center && center[0] && center[1]) ? center : defaultCenter;
+  useEffect(() => {
+    if (initialSelectedPos) {
+      setSelectedPos(initialSelectedPos);
+    }
+  }, [initialSelectedPos]);
+
+  const mapCenter = userGpsPos || ((center && center[0] && center[1]) ? center : defaultCenter);
+
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = [pos.coords.latitude, pos.coords.longitude];
+        setUserGpsPos(coords);
+        setSelectedPos(coords);
+        setGpsLoading(false);
+        if (onSelectLocation) {
+          onSelectLocation(pos.coords.latitude, pos.coords.longitude, true);
+        }
+      },
+      (err) => {
+        console.warn('GPS Locate Error:', err);
+        setGpsLoading(false);
+        alert('Could not acquire live GPS position. Please ensure location permissions are granted.');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   return (
-    <div style={{ height }} className="w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-800 relative z-0">
+    <div style={{ height }} className="w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-800 relative z-0 group">
+      
+      {/* Floating GPS Button */}
+      {showGpsButton && (
+        <button
+          type="button"
+          onClick={handleLocateMe}
+          disabled={gpsLoading}
+          className="absolute top-3 right-3 z-[400] px-3.5 py-2 rounded-xl bg-gray-900/90 border border-sky-500/40 text-sky-400 hover:text-white hover:bg-sky-500/20 font-bold text-xs shadow-xl flex items-center gap-1.5 transition-all backdrop-blur-md"
+          title="Detect Current GPS Location"
+        >
+          <Crosshair className={`w-4 h-4 ${gpsLoading ? 'animate-spin text-amber-400' : 'text-sky-400'}`} />
+          <span>{gpsLoading ? 'Acquiring GPS...' : '🎯 My Live GPS'}</span>
+        </button>
+      )}
+
       <MapContainer
         center={mapCenter}
-        zoom={12}
+        zoom={13}
         scrollWheelZoom={true}
         className="w-full h-full"
       >
-        <MapController center={mapCenter} />
+        <MapController center={mapCenter} userGpsPos={userGpsPos} />
         
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        {/* Real-time User GPS Marker */}
+        {userGpsPos && (
+          <Marker position={userGpsPos} icon={gpsPulseIcon}>
+            <Popup>
+              <div className="p-1 font-sans text-xs">
+                <span className="font-extrabold text-sky-600 flex items-center gap-1">
+                  <Navigation className="w-3.5 h-3.5" />
+                  Your Real-Time GPS Position
+                </span>
+                <span className="text-[10px] text-gray-500 font-mono block mt-0.5">
+                  {userGpsPos[0].toFixed(5)}° N, {userGpsPos[1].toFixed(5)}° E
+                </span>
+              </div>
+            </Popup>
+          </Marker>
+        )}
 
         {onSelectLocation && (
           <LocationPicker 
@@ -160,4 +242,5 @@ const Maps = ({
 };
 
 export default Maps;
+
 

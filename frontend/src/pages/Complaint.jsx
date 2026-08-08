@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { submitComplaintAPI } from '../services/complaintAPI';
 import { addComplaint } from '../redux/complaintSlice';
 import Maps from '../components/Maps';
-import { AlertTriangle, MapPin, Upload, ShieldAlert, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+import { AlertTriangle, MapPin, Upload, ShieldAlert, Sparkles, CheckCircle2, ArrowRight, Crosshair, Navigation } from 'lucide-react';
 
 const Complaint = () => {
   const { token, user } = useSelector((state) => state.auth);
@@ -23,8 +23,40 @@ const Complaint = () => {
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const [loading, setLoading] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsSuccess, setGpsSuccess] = useState(false);
   const [error, setError] = useState('');
   const [successComplaint, setSuccessComplaint] = useState(null);
+
+  const handleDetectGPS = () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser.');
+      return;
+    }
+    setGpsLoading(true);
+    setError('');
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setFormData((prev) => ({
+          ...prev,
+          lat: latitude,
+          lng: longitude,
+          address: `Real-time GPS (${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E), Active Ward`
+        }));
+        setGpsLoading(false);
+        setGpsSuccess(true);
+        setTimeout(() => setGpsSuccess(false), 4000);
+      },
+      (err) => {
+        console.warn('GPS Error:', err.message);
+        setGpsLoading(false);
+        setError('Could not access live GPS. Please enable browser location permissions or click on map pin.');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const categories = ['Electricity', 'Water', 'Road', 'Crime', 'Women Safety', 'Corruption', 'Healthcare', 'Education', 'Other'];
 
@@ -240,7 +272,24 @@ const Complaint = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1">Location Address / Landmark</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-gray-300">Location Address / Landmark</label>
+                  <button
+                    type="button"
+                    onClick={handleDetectGPS}
+                    disabled={gpsLoading}
+                    className="px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[11px] font-bold flex items-center gap-1 transition-all"
+                  >
+                    <Crosshair className={`w-3.5 h-3.5 ${gpsLoading ? 'animate-spin text-amber-400' : ''}`} />
+                    <span>{gpsLoading ? 'Detecting GPS...' : '🎯 Auto-Detect GPS'}</span>
+                  </button>
+                </div>
+                {gpsSuccess && (
+                  <div className="text-[11px] text-emerald-400 font-mono font-bold mb-1.5 flex items-center gap-1 bg-emerald-500/10 p-1.5 rounded-lg border border-emerald-500/20">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Real-time GPS Location Acquired! ({formData.lat.toFixed(4)}°, {formData.lng.toFixed(4)}°)</span>
+                  </div>
+                )}
                 <input
                   type="text"
                   value={formData.address}
