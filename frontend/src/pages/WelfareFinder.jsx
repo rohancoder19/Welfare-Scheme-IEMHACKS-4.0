@@ -52,8 +52,23 @@ const WelfareFinder = () => {
   };
 
   useEffect(() => {
-    fetchRecommendations(profileInput);
-  }, []);
+    if (user) {
+      const updatedProfile = {
+        income: user.income || 250000,
+        age: user.age || 25,
+        gender: user.gender || 'All',
+        occupation: user.occupation || 'General',
+        student: (user.occupation || '').toLowerCase().includes('student'),
+        category: user.category || 'General',
+        education: user.education || 'Graduate',
+        state: user.state || 'Maharashtra'
+      };
+      setProfileInput(updatedProfile);
+      fetchRecommendations(updatedProfile);
+    } else {
+      fetchRecommendations(profileInput);
+    }
+  }, [user]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
