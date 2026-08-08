@@ -1,0 +1,192 @@
+[
+  {
+    "id": "sch_pmay",
+    "schemeName": "Pradhan Mantri Awas Yojana (PMAY-Urban/Gramin)",
+    "category": "Housing",
+    "description": "Government of India flagship housing scheme providing interest subsidy up to ₹2.67 Lakhs and financial assistance for constructing pucca houses. Targets Economically Weaker Sections (EWS), Low Income Groups (LIG), and Middle Income Groups (MIG). Mandatory female ownership or co-ownership.",
+    "eligibilityCriteria": {
+      "maxIncome": 600000,
+      "minAge": 18,
+      "maxAge": 70,
+      "gender": "All",
+      "occupation": "All",
+      "category": "All",
+      "education": "All"
+    },
+    "state": "All India",
+    "benefits": "Up to ₹2,67,000 upfront credit linked interest subsidy directly credited to home loan account.",
+    "deadline": "31 Dec 2026",
+    "applicationUrl": "https://pmaymis.gov.in"
+  },
+  {
+    "id": "sch_pmjay",
+    "schemeName": "Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY)",
+    "category": "Health",
+    "description": "National health protection scheme covering over 12 crore poor and vulnerable families. Offers cashless and paperless hospitalization treatment across empanelled government and private secondary/tertiary hospitals nationwide.",
+    "eligibilityCriteria": {
+      "maxIncome": 500000,
+      "minAge": 0,
+      "maxAge": 100,
+      "gender": "All",
+      "occupation": "All",
+      "category": "All",
+      "education": "All"
+    },
+    "state": "All India",
+    "benefits": "₹5,00,000 cashless health insurance coverage per family per year for secondary and tertiary hospital care.",
+    "deadline": "Active Year-round",
+    "applicationUrl": "https://pmjay.gov.in"
+  },
+  {
+    "id": "sch_pmkisan",
+    "schemeName": "PM Kisan Samman Nidhi (PM-KISAN)",
+    "category": "Agriculture",
+    "description": "Central sector scheme giving direct income support to small and marginal farmer families with cultivable landholding up to 2 hectares. Money is transferred directly into verified bank accounts in three equal installments every four months.",
+    "eligibilityCriteria": {
+      "maxIncome": 600000,
+      "minAge": 18,
+      "maxAge": 75,
+      "gender": "All",
+      "occupation": "Farmer",
+      "category": "All",
+      "education": "All"
+    },
+    "state": "All India",
+    "benefits": "Direct financial transfer of ₹6,000 per year paid in 3 installments of ₹2,000 directly to bank accounts.",
+    "deadline": "Active Year-round",
+    "applicationUrl": "https://pmkisan.gov.in"
+  },
+  {
+    "id": "sch_postmatric",
+    "schemeName": "Post-Matric Scholarship Scheme for SC/ST/OBC Students",
+    "category": "Education",
+    "description": "Centrally sponsored scholarship scheme providing complete tuition fee coverage and monthly maintenance allowances to students belonging to SC, ST, and OBC communities pursuing post-secondary/higher education studies.",
+    "eligibilityCriteria": {
+      "maxIncome": 250000,
+      "minAge": 15,
+      "maxAge": 30,
+      "gender": "All",
+      "occupation": "Student",
+      "category": "SC, ST, OBC",
+      "education": "High School, Undergraduate, Post-Graduate"
+    },
+    "state": "All India",
+    "benefits": "100% compulsory tuition fee waiver plus monthly maintenance stipend up to ₹1,200/month.",
+    "deadline": "31 Oct 2026",
+    "applicationUrl": "https://scholarships.gov.in"
+  },
+  {
+    "id": "sch_ladlibehna",
+    "schemeName": "Chief Minister Ladli Behna Yojana",
+    "category": "Social Security",
+    "description": "State welfare initiative by Government of Madhya Pradesh providing direct monthly financial support to resident women aged 21 to 60 years from economically weaker households to foster economic independence, nutrition, and self-reliance.",
+    "eligibilityCriteria": {
+      "maxIncome": 250000,
+      "minAge": 21,
+      "maxAge": 60,
+      "gender": "Female",
+      "occupation": "All",
+      "category": "All",
+      "education": "All"
+    },
+    "state": "Madhya Pradesh",
+    "benefits": "Direct monthly cash transfer of ₹1,250 credited directly to DBT-enabled bank account.",
+    "deadline": "Open Throughout Year",
+    "applicationUrl": "https://cmladlibehna.mp.gov.in"
+  },
+  {
+    "id": "sch_pmvishwakarma",
+    "schemeName": "PM Vishwakarma Scheme for Artisans & Craftsmen",
+    "category": "Financial Support",
+    "description": "Comprehensive support package for traditional artisans, craftspeople, and self-employed workers across 18 trades (carpenters, blacksmiths, potters, weavers, tailors). Provides formal skill training, modern toolkits grant, and collateral-free micro credit at 5% interest rate.",
+    "eligibilityCriteria": {
+      "maxIncome": 450000,
+      "minAge": 18,
+      "maxAge": 65,
+      "gender": "All",
+      "occupation": "Artisan / Craftsman",
+      "category": "All",
+      "education": "All"
+    },
+    "state": "All India",
+    "benefits": "₹15,000 e-voucher for modern toolkits + Collateral-free loan up to ₹3,00,000 at 5% concessional interest rate.",
+    "deadline": "Open Throughout Year",
+    "applicationUrl": "https://pmvishwakarma.gov.in"
+  },
+  {
+    "id": "sch_majhimadho",
+    "schemeName": "Majhi Kanya Bhagyashree Scheme",
+    "category": "Women & Child",
+    "description": "Government of Maharashtra welfare initiative to encourage female birth ratio, girl child education, and healthcare. Financial incentives deposited into girl child's fixed deposit bank account upon institutional birth and school progress.",
+    "eligibilityCriteria": {
+      "maxIncome": 750000,
+      "minAge": 0,
+      "maxAge": 18,
+      "gender": "Female",
+      "occupation": "Student / Child",
+      "category": "All",
+      "education": "Schooling"
+    },
+    "state": "Maharashtra",
+    "benefits": "Financial grant of ₹50,000 deposited in bank account of single girl child (or ₹25,000 each for two girl children).",
+    "deadline": "Active Year-round",
+    "applicationUrl": "https://maharashtra.gov.in"
+  },
+  {
+    "id": "sch_mudra",
+    "schemeName": "PM MUDRA Yojana (Micro Units Development & Refinance Agency)",
+    "category": "Business Loan",
+    "description": "Provides collateral-free business loans up to ₹10 Lakhs to non-farm, non-corporate micro/small enterprises for manufacturing, trading, services, and agricultural allied activities under Shishu, Kishor, and Tarun categories.",
+    "eligibilityCriteria": {
+      "maxIncome": 1000000,
+      "minAge": 18,
+      "maxAge": 65,
+      "gender": "All",
+      "occupation": "Self-Employed",
+      "category": "All",
+      "education": "All"
+    },
+    "state": "All India",
+    "benefits": "Collateral-free business credit up to ₹10,00,000 with low processing fee and flexible repayment tenure up to 5 years.",
+    "deadline": "Active Year-round",
+    "applicationUrl": "https://www.mudra.org.in"
+  },
+  {
+    "id": "sch_pmegp",
+    "schemeName": "Prime Minister Employment Generation Programme (PMEGP)",
+    "category": "Employment & Business",
+    "description": "Credit-linked subsidy program to generate employment opportunities by establishing micro enterprises in rural and urban areas. Provides capital subsidy up to 35% of project cost for new manufacturing and service ventures.",
+    "eligibilityCriteria": {
+      "maxIncome": 800000,
+      "minAge": 18,
+      "maxAge": 60,
+      "gender": "All",
+      "occupation": "Unemployed / EWS",
+      "category": "All",
+      "education": "Pass 8th Standard minimum"
+    },
+    "state": "All India",
+    "benefits": "Government subsidy of 15% to 35% on total project cost up to ₹50 Lakhs for manufacturing units.",
+    "deadline": "Active Year-round",
+    "applicationUrl": "https://www.kviconline.gov.in"
+  },
+  {
+    "id": "sch_standupindia",
+    "schemeName": "Stand-Up India Scheme for Women & SC/ST Entrepreneurs",
+    "category": "Financial Support",
+    "description": "Facilitates bank loans between ₹10 Lakhs and ₹1 Crore to at least one SC/ST borrower and at least one woman borrower per bank branch for setting up a greenfield enterprise in manufacturing, services, or trading sector.",
+    "eligibilityCriteria": {
+      "maxIncome": 1200000,
+      "minAge": 18,
+      "maxAge": 65,
+      "gender": "Female",
+      "occupation": "Self-Employed",
+      "category": "SC, ST, Women",
+      "education": "All"
+    },
+    "state": "All India",
+    "benefits": "Bank credit from ₹10 Lakhs up to ₹1 Crore for greenfield enterprise setup with concessional interest rates.",
+    "deadline": "Active Year-round",
+    "applicationUrl": "https://www.standupmitra.in"
+  }
+]

@@ -1,0 +1,34 @@
+# Environment variables & Secret Keys
+.env
+.env.local
+.env.production
+*.env
+
+# Dependency directories
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Databases & Local Storage
+chroma_db/
+*.db
+*.sqlite3
+
+# ML Model Pickles & Artifacts
+models/*.pkl
+*.pkl
+
+# Uploads & Logs
+uploads/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+.vite/

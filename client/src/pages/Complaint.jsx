@@ -1,0 +1,266 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { submitComplaintAPI } from '../services/complaintAPI';
+import { addComplaint } from '../redux/complaintSlice';
+import Maps from '../components/Maps';
+import { AlertTriangle, MapPin, Upload, ShieldAlert, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+
+const Complaint = () => {
+  const { token, user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    title: '',
+    category: 'Electricity',
+    description: '',
+    address: 'Park Street, Ward 63, Pune',
+    lat: 18.5204,
+    lng: 73.8567
+  });
+
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [successComplaint, setSuccessComplaint] = useState(null);
+
+  const categories = ['Electricity', 'Water', 'Road', 'Crime', 'Women Safety', 'Corruption', 'Healthcare', 'Education', 'Other'];
+
+  const handlePhotoChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setPhoto(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.title || !formData.description) {
+      setError('Please provide issue title and description');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const data = new FormData();
+      data.append('title', formData.title);
+      data.append('category', formData.category);
+      data.append('description', formData.description);
+      data.append('address', formData.address);
+      data.append('lat', formData.lat);
+      data.append('lng', formData.lng);
+      if (photo) data.append('photo', photo);
+
+      const res = await submitComplaintAPI(data, token);
+      if (res.success) {
+        setSuccessComplaint(res.complaint);
+        dispatch(addComplaint(res.complaint));
+      } else {
+        setError(res.message || 'Submission failed');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error filing grievance complaint');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+      
+      {/* Header Banner */}
+      <div className="glass-panel rounded-3xl p-8 border border-gray-800 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 text-rose-400 text-xs font-semibold uppercase tracking-wider border border-rose-500/20">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            NLP COMPLAINT TRIAGE & PRIORITY DETECTOR
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-white">
+            File Civic Grievance Complaint
+          </h1>
+
+          <p className="text-sm text-gray-300 max-w-2xl leading-relaxed">
+            Report public infrastructure hazards, electrical faults, sewage leaks, or safety concerns. Our Python NLP classifier analyzes urgency and automatically alerts responsible municipal officers.
+          </p>
+        </div>
+      </div>
+
+      {successComplaint ? (
+        <div className="glass-panel rounded-3xl p-10 border border-emerald-500/30 text-center max-w-2xl mx-auto space-y-6">
+          <div className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mx-auto flex items-center justify-center glow-emerald">
+            <CheckCircle2 className="w-10 h-10" />
+          </div>
+
+          <h2 className="text-3xl font-extrabold text-white">Grievance Registered Successfully!</h2>
+
+          <div className="p-6 rounded-2xl bg-gray-900 border border-gray-800 space-y-3 text-left">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-gray-400">Complaint ID:</span>
+              <span className="text-emerald-400 font-bold">{successComplaint._id}</span>
+            </div>
+
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-gray-400">AI Priority Prediction:</span>
+              <span className={`px-2.5 py-0.5 rounded font-bold ${
+                successComplaint.priority === 'High' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
+              }`}>
+                {successComplaint.priority} Priority ({successComplaint.priorityScore}% Urgency)
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-gray-400">Assigned Officer:</span>
+              <span className="text-gray-200 font-semibold">{successComplaint.assignedOfficer}</span>
+            </div>
+
+            <div className="pt-2 border-t border-gray-800 text-xs text-gray-300">
+              <span className="font-semibold text-amber-400 block mb-1">AI NLP Analysis Note:</span>
+              <p className="italic text-gray-400">{successComplaint.nlpAnalysis}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={() => navigate('/complaint-status')}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2"
+            >
+              Track Live Grievance Timeline
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => { setSuccessComplaint(null); setFormData({ ...formData, title: '', description: '' }); }}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gray-900 border border-gray-800 text-gray-300 hover:text-white font-semibold text-xs"
+            >
+              File Another Grievance
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          {/* Complaint Form */}
+          <div className="glass-panel rounded-3xl p-8 border border-gray-800 space-y-6">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-rose-400" />
+              Grievance Details Form
+            </h3>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Complaint Category *</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500/50"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Issue Title / Short Summary *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. High Voltage Open Transformer near school"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-rose-500/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Detailed Description *</label>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Describe exact issue, severity, landmark, and potential hazard..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-rose-500/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Location Address / Landmark</label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Attach Photo Evidence (Optional)</label>
+                <div className="border-2 border-dashed border-gray-800 hover:border-rose-500/50 rounded-2xl p-4 text-center cursor-pointer relative bg-gray-950/50">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                  <Upload className="w-5 h-5 text-rose-400 mx-auto mb-1" />
+                  <span className="text-xs text-gray-300 font-medium block">
+                    {photo ? photo.name : 'Upload Photo Proof (JPEG/PNG)'}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-gray-950 font-bold text-xs shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 transition-all"
+              >
+                {loading ? 'Processing AI Priority Triage...' : 'Submit Grievance with AI Classification'}
+                <ArrowRight className="w-4 h-4 text-gray-950" />
+              </button>
+
+            </form>
+          </div>
+
+          {/* Interactive Map Selector Preview */}
+          <div className="space-y-4">
+            <div className="glass-panel rounded-3xl p-6 border border-gray-800 space-y-3">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-rose-400" />
+                Select Geolocation Coordinates on Map
+              </h3>
+              <p className="text-xs text-gray-400">Map pin allows municipal inspection teams to pinpoint exact grievance coordinates.</p>
+              <Maps complaints={[]} height="340px" />
+            </div>
+
+            {photoPreview && (
+              <div className="glass-panel rounded-2xl p-4 border border-gray-800 space-y-2">
+                <span className="text-xs font-semibold text-gray-300 block">Photo Attachment Preview:</span>
+                <img src={photoPreview} alt="Evidence preview" className="w-full h-40 object-cover rounded-xl border border-gray-800" />
+              </div>
+            )}
+          </div>
+
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+export default Complaint;
