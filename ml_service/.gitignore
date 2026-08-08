@@ -9,3 +9,4 @@ __pycache__/
 chroma_db/
 models/*.pkl
 test_*.py
+updated_data.csv
