@@ -66,21 +66,30 @@ const ComplaintStatus = () => {
     return 0; // Complaint Submitted
   };
 
-  // Helper for SLA calculation
+  // Helper for SLA calculation (ACTIVE, WARNING, BREACHED, RESOLVED)
   const getSLAInfo = (cmp) => {
-    if (cmp.status === 'Resolved') return { text: 'Resolved within SLA', isBreached: false };
-    if (!cmp.slaDeadline) return { text: '48h Standard SLA', isBreached: false };
+    if (cmp.status === 'Resolved') return { statusLabel: 'RESOLVED', text: 'RESOLVED', isBreached: false };
+    if (!cmp.slaDeadline) return { statusLabel: 'ACTIVE', text: 'ACTIVE (48h)', isBreached: false };
 
     const now = Date.now();
     const deadline = new Date(cmp.slaDeadline).getTime();
     const diffMs = deadline - now;
 
     if (diffMs <= 0) {
-      return { text: '⚠ SLA BREACHED', isBreached: true };
+      return { statusLabel: 'BREACHED', text: '⚠ SLA BREACHED', isBreached: true };
     }
+
+    const totalDuration = (cmp.slaHours || 48) * 3600 * 1000;
+    const isWarning = diffMs < (totalDuration * 0.25) || diffMs < (6 * 3600 * 1000);
+
     const hours = Math.floor(diffMs / (3600 * 1000));
     const mins = Math.floor((diffMs % (3600 * 1000)) / (60 * 1000));
-    return { text: `⏱ ${hours}h ${mins}m remaining`, isBreached: false };
+
+    if (isWarning) {
+      return { statusLabel: 'WARNING', text: `⏱ WARNING (${hours}h ${mins}m remaining)`, isWarning: true };
+    }
+
+    return { statusLabel: 'ACTIVE', text: `⏱ ACTIVE (${hours}h ${mins}m remaining)`, isActive: true };
   };
 
   const getActorBadge = (actorType) => {
@@ -246,12 +255,18 @@ const ComplaintStatus = () => {
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                           <span>Public safety and infrastructure severity detected</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                          <span>Urgent municipal department triage rule applied</span>
-                        </div>
                       </>
                     )}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-2 border-t border-gray-800/80">
+                  <p className="text-xs font-semibold text-sky-300">
+                    Why {selectedComplaint.aiAnalysis?.department || selectedComplaint.assignedOfficer}?
+                  </p>
+                  <div className="bg-gray-950 p-3 rounded-xl border border-gray-800 text-xs text-gray-300">
+                    <span className="font-bold block text-white mb-0.5">{selectedComplaint.aiAnalysis?.department || selectedComplaint.assignedOfficer}</span>
+                    <span className="text-gray-400">Reason: {selectedComplaint.aiAnalysis?.departmentReason || `Complaint concerns ${selectedComplaint.category} issues.`}</span>
                   </div>
                 </div>
               </div>

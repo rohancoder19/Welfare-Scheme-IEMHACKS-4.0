@@ -283,8 +283,26 @@ const createComplaint = async (req, res) => {
 
     const photoUrl = req.file ? `/uploads/${req.file.filename}` : '';
 
-    // Step 1: Call Python ML service to perform full AI Triage & Analysis
-    const aiAnalysis = await pythonService.analyzeComplaint(title, description, category || 'Other', address);
+    // Step 1: Call Python ML service with non-failing try-catch fallback
+    let aiAnalysis = null;
+    try {
+      aiAnalysis = await pythonService.analyzeComplaint(title, description, category || 'Other', address);
+    } catch (aiErr) {
+      console.warn('[AI Service Error] Fallback triggered during complaint submission:', aiErr.message);
+      aiAnalysis = {
+        category: category || 'General Public Service',
+        subcategory: 'General Services',
+        priority: 'MEDIUM',
+        urgencyScore: 50,
+        department: 'Civic Grievance Cell',
+        departmentReason: 'Assigned to general civic cell pending manual officer review',
+        confidence: 0.50,
+        recommendedSLAHours: 48,
+        recommendedAction: 'Manual administrative officer classification required',
+        reason: ['AI Analysis Unavailable - Manual classification pending'],
+        nlpSummary: 'AI Analysis: Unavailable. Pending manual officer review.'
+      };
+    }
 
     const finalCategory = aiAnalysis.category || aiAnalysis.predictedCategory || category || 'General';
     const finalPriority = aiAnalysis.priority || 'HIGH';

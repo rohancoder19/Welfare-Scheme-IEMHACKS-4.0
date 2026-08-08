@@ -106,6 +106,7 @@ def analyze_complaint(req: ComplaintAnalysisRequest):
             "priority": analysis.get("priority"),
             "urgencyScore": analysis.get("urgencyScore"),
             "department": analysis.get("department"),
+            "departmentReason": analysis.get("departmentReason"),
             "confidence": analysis.get("confidence"),
             "recommendedSLAHours": analysis.get("recommendedSLAHours"),
             "recommendedAction": analysis.get("recommendedAction"),

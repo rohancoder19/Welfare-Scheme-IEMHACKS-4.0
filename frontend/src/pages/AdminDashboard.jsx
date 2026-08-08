@@ -140,21 +140,28 @@ const AdminDashboard = () => {
     }
   };
 
-  // Helper for SLA calculation
+  // Helper for SLA calculation (ACTIVE, WARNING, BREACHED, RESOLVED)
   const getSLAStatus = (cmp) => {
-    if (cmp.status === 'Resolved') return { text: 'Resolved', isBreached: false };
-    if (!cmp.slaDeadline) return { text: '48h SLA', isBreached: false };
+    if (cmp.status === 'Resolved') return { statusLabel: 'RESOLVED', text: 'RESOLVED', isBreached: false };
+    if (!cmp.slaDeadline) return { statusLabel: 'ACTIVE', text: 'ACTIVE (48h)', isBreached: false };
 
     const now = Date.now();
     const deadline = new Date(cmp.slaDeadline).getTime();
     const diffMs = deadline - now;
 
     if (diffMs <= 0) {
-      return { text: '⚠ SLA BREACHED', isBreached: true };
+      return { statusLabel: 'BREACHED', text: '⚠ SLA BREACHED', isBreached: true };
     }
+    const totalDuration = (cmp.slaHours || 48) * 3600 * 1000;
+    const isWarning = diffMs < (totalDuration * 0.25) || diffMs < (6 * 3600 * 1000);
+
     const hours = Math.floor(diffMs / (3600 * 1000));
     const mins = Math.floor((diffMs % (3600 * 1000)) / (60 * 1000));
-    return { text: `⏱ ${hours}h ${mins}m remaining`, isBreached: false };
+
+    if (isWarning) {
+      return { statusLabel: 'WARNING', text: `⏱ WARNING (${hours}h ${mins}m)`, isWarning: true };
+    }
+    return { statusLabel: 'ACTIVE', text: `⏱ ACTIVE (${hours}h ${mins}m)`, isActive: true };
   };
 
   // Count Priority Queue stats
@@ -374,12 +381,19 @@ const AdminDashboard = () => {
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                           <span>Reported unresolved for multi-day period</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                          <span>Potential public health & citizen inconvenience impact</span>
-                        </div>
                       </>
                     )}
+                  </div>
+                </div>
+
+                {/* AI Department Reason */}
+                <div>
+                  <span className="text-xs font-bold uppercase text-sky-400 block mb-1">
+                    WHY THIS DEPARTMENT?
+                  </span>
+                  <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 text-xs text-sky-200">
+                    <span className="font-bold block mb-0.5">{selectedComplaint.aiAnalysis?.department || selectedComplaint.assignedOfficer}</span>
+                    <span>Reason: {selectedComplaint.aiAnalysis?.departmentReason || `Complaint concerns ${selectedComplaint.category} issues.`}</span>
                   </div>
                 </div>
               </div>

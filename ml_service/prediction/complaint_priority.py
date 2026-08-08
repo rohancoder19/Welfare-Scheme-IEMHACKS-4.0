@@ -228,6 +228,7 @@ class ComplaintNLPClassifier:
 
         # Clean duplicate reasons
         unique_reasons = list(dict.fromkeys(reasons))
+        department_reason = f"Complaint concerns {subcategory.lower()} under {final_category} sector."
 
         return {
             "category": final_category,
@@ -237,6 +238,7 @@ class ComplaintNLPClassifier:
             "urgencyScore": urgency_score,
             "priorityScore": urgency_score,
             "department": department,
+            "departmentReason": department_reason,
             "confidence": confidence,
             "recommendedSLAHours": sla_hours,
             "recommendedAction": recommended_action,

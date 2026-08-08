@@ -156,6 +156,15 @@ const Complaint = () => {
                 )}
               </div>
             </div>
+
+            <div className="space-y-1 pt-1">
+              <span className="font-bold text-sky-400 block">
+                Why Department ({successComplaint.aiAnalysis?.department || successComplaint.assignedOfficer})?
+              </span>
+              <p className="text-gray-300 italic bg-gray-950 p-3 rounded-xl border border-gray-800">
+                {successComplaint.aiAnalysis?.departmentReason || `Complaint concerns ${successComplaint.category} issues.`}
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
