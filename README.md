@@ -130,9 +130,3 @@ npm run dev
 
 ---
 
-## 🔑 Demo Accounts
-
-| Role | Email | Password |
-|---|---|---|
-| **Citizen Applicant** | `ananya@citizen.in` | `user123` |
-| **Municipal Officer / Admin** | `admin@gov.in` | `admin123` |
