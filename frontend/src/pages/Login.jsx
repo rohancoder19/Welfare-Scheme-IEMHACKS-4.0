@@ -50,10 +50,10 @@ const Login = ({ message }) => {
         
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 mx-auto flex items-center justify-center">
-            <Shield className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-xl shadow-indigo-500/20 mx-auto overflow-hidden">
+            <img src="/app-logo.jpg" alt="Welfare Scheme Icon" className="w-full h-full object-cover rounded-[14px]" />
           </div>
-          <h2 className="text-2xl font-bold text-white">Sign In to CivicAI</h2>
+          <h2 className="text-2xl font-bold text-white">Sign In to Welfare Scheme Portal</h2>
           <p className="text-xs text-gray-400">Access personalized scheme recommendations & grievance tracking</p>
         </div>
 

@@ -10,11 +10,11 @@ const Footer = () => {
           {/* Brand Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
-                <Shield className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-lg overflow-hidden">
+                <img src="/app-logo.jpg" alt="App Logo" className="w-full h-full object-cover rounded-[7px]" />
               </div>
               <span className="text-lg font-bold text-white tracking-wide">
-                CIVIC<span className="text-emerald-400">AI</span> PORTAL
+                WELFARE<span className="text-emerald-400"> SCHEME</span> PORTAL
               </span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">

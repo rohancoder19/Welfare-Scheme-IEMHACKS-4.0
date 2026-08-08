@@ -10,3 +10,4 @@ chroma_db/
 models/*.pkl
 test_*.py
 updated_data.csv
+data/processed_welfare_schemes.json

@@ -55,11 +55,11 @@ const Register = () => {
       <div className="max-w-2xl w-full glass-panel rounded-3xl p-8 border border-gray-800 space-y-6 shadow-2xl">
         
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 mx-auto flex items-center justify-center">
-            <User className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-xl shadow-indigo-500/20 mx-auto overflow-hidden">
+            <img src="/app-logo.jpg" alt="Welfare Scheme Icon" className="w-full h-full object-cover rounded-[14px]" />
           </div>
           <h2 className="text-2xl font-bold text-white">Create Citizen Account</h2>
-          <p className="text-xs text-gray-400">Enter your details for automated AI Scheme Eligibility matching</p>
+          <p className="text-xs text-gray-400">Register to access AI welfare scheme recommendations & grievance tracking</p>
         </div>
 
         {error && (

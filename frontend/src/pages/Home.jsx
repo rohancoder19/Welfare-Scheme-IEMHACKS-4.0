@@ -46,10 +46,10 @@ const Home = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-8">
           
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider glow-emerald">
-            <Zap className="w-4 h-4 text-emerald-400" />
-            AI-POWERED CIVIC GOVERNANCE ENGINE
+          {/* Badge & Logo */}
+          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider glow-emerald shadow-xl">
+            <img src="/app-logo.jpg" alt="App Logo" className="w-7 h-7 rounded-lg object-cover border border-emerald-400/40" />
+            <span>AI-POWERED WELFARE SCHEME & CIVIC GOVERNANCE ENGINE</span>
           </div>
 
           {/* Heading */}

@@ -26,17 +26,19 @@ const Navbar = () => {
           
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-gray-950 rounded-[10px] flex items-center justify-center">
-                <Shield className="w-6 h-6 text-emerald-400 group-hover:rotate-12 transition-transform" />
-              </div>
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform overflow-hidden">
+              <img
+                src="/app-logo.jpg"
+                alt="Welfare Scheme Portal Logo"
+                className="w-full h-full object-cover rounded-[10px]"
+              />
             </div>
             <div>
               <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-gray-200 to-emerald-400 bg-clip-text text-transparent">
-                CIVIC<span className="text-emerald-400">AI</span>
+                WELFARE<span className="text-emerald-400"> SCHEME</span>
               </span>
               <span className="block text-[10px] text-emerald-400/80 uppercase tracking-widest font-semibold">
-                Welfare & Grievance Portal
+                AI Welfare & Grievance Portal
               </span>
             </div>
           </Link>
