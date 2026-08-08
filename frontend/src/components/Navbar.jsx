@@ -17,6 +17,7 @@ const Navbar = () => {
   };
 
   const isActive = (path) => location.pathname === path;
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   return (
     <nav className="sticky top-0 z-50 glass-panel border-b border-gray-800 backdrop-blur-xl">
