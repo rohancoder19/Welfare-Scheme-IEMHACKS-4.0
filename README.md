@@ -1,6 +1,6 @@
-# AI-Powered Civic Welfare & Grievance Redressal System
+# AI-Powered Civic Welfare & Scheme Recommendation Platform (RAG System)
 
-A complete, production-grade full-stack platform integrating a **React.js Frontend**, **Node.js + Express.js API Server**, **MongoDB Database Models**, and a **Python FastAPI ML Microservice**.
+A full-stack AI platform integrating a **React.js Frontend**, **Node.js + Express.js API Server**, **MongoDB Models**, and a **Python FastAPI Microservice** powered by **ChromaDB Vector Database** and **Gemini 2.5 Flash AI RAG Pipeline**.
 
 ---
 
@@ -25,16 +25,16 @@ A complete, production-grade full-stack platform integrating a **React.js Fronte
                  MongoDB Atlas      Cloudinary/Storage
                        │
                        ▼
-            FastAPI Python ML Microservice
+            FastAPI Python Microservice
        ┌───────────────┼───────────────┬───────────────┐
        │               │               │               │
- Scheme Eligibility  Ranked Scheme    Complaint NLP    AI Chatbot
- Random Forest Model  Recommender    Priority Classifier Engine
+ Scheme Ingestion    ChromaDB       AI Profile    Gemini 2.5 Flash
+   PDF/JSON RAG     Vector Store    Evaluator     RAG Chatbot
        │               │               │               │
        └───────────────┴───────────────┴───────────────┘
                        │
                        ▼
-             Results to Express API
+            Results to Express API
                        │
                        ▼
             React Dashboard / Chatbot
@@ -42,37 +42,28 @@ A complete, production-grade full-stack platform integrating a **React.js Fronte
 
 ---
 
-## 🚀 Key Modules & Features
+## 🚀 Key Features
 
-### 1. 🤖 Python ML Microservice (`ml_service/`)
-- **Scheme Recommendation Engine**: Evaluates citizen demographics (Income, Age, Gender, Occupation, Category, Education, State) using Random Forest & Rule-based scoring to generate match percentages and eligibility reasons.
-- **Complaint NLP & Priority Classifier**: Uses TF-IDF and Naive Bayes NLP modeling to categorize civic grievances (*Road, Water, Electricity, Crime, Women Safety, Corruption, Healthcare, Education*) and predict priority level (*High, Medium, Low*).
-- **AI Scheme Assistant Chatbot**: Conversational Q&A engine for scheme information, document requirements, and filing complaints.
+### 1. 🤖 AI RAG Recommendation Engine (`ml_service/`)
+- **ChromaDB Vector Store**: Indexes PDF policy guidelines and scheme documents using vector embeddings (`text-embedding-004`).
+- **Semantic Profile Matcher**: Evaluates citizen demographics (Income, Age, Gender, Occupation, Social Category, State) against retrieved scheme content to determine eligibility (`Eligible`, `Probably Eligible`, `Not Eligible`).
+- **Gemini 2.5 Flash AI Chatbot**: Conversational RAG Q&A assistant retrieving real-time vector scheme knowledge.
 
 ### 2. ⚡ Express Backend API (`server/`)
 - **JWT & Role-Based Security**: Roles for `Citizen`, `Admin`, and `Officer`.
 - **Database Models**: Mongoose schemas for `User`, `Scheme`, `Complaint`, and `StatusLog`.
-- **Hybrid Data Seeder**: Pre-loaded catalog of Indian government schemes (*PM Awas Yojana, Ayushman Bharat, PM Kisan, Post-Matric Scholarship, Ladli Behna, PM Vishwakarma*) and sample complaints with map coordinates.
 
 ### 3. 🎨 Modern React Frontend (`client/`)
-- **Vibrant Glassmorphism Design System**: Built with Tailwind CSS, Framer Motion, Lucide icons, and Leaflet Maps.
-- **Pages**:
-  - `Home`: Hero with live counter, scheme directory, and civic grievance heatmap.
-  - `WelfareFinder`: AI Scheme Matcher form yielding ranked recommendations.
-  - `ApplyScheme`: Multi-step application modal with document verification.
-  - `Complaint`: Grievance submission with location pin picker and real-time AI priority classification.
-  - `ComplaintStatus`: Real-time status tracking timeline with municipal officer action logs.
-  - `AdminDashboard`: Command center for officers to triage grievances, assign field units, update statuses, and view analytics.
-  - `Chatbot`: Floating interactive AI assistant widget.
+- **Vibrant Glassmorphism Interface**: Built with Tailwind CSS, Framer Motion, Lucide icons, and Leaflet Maps.
 
 ---
 
-## 💻 How to Run the Application
+## 💻 How to Run
 
 ### 1. Start Python ML Microservice
 ```bash
 cd ml_service
-python train_models.py
+python ingestion/ingest.py
 python api.py
 ```
 *(Runs on `http://127.0.0.1:8000`)*
@@ -93,7 +84,7 @@ npm run dev
 
 ---
 
-## 🔑 Demo Login Accounts
+## 🔑 Demo Accounts
 
 | Role | Email | Password |
 |---|---|---|
