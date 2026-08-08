@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateProfile } from '../redux/authSlice';
 import { User, Mail, Shield, Briefcase, IndianRupee, MapPin, CheckCircle, Save } from 'lucide-react';
@@ -8,16 +8,32 @@ const Profile = () => {
   const dispatch = useDispatch();
 
   const [formData, setFormData] = useState({
-    name: user?.name || 'Ananya Verma',
-    email: user?.email || 'ananya@citizen.in',
-    income: user?.income || 240000,
+    name: user?.name || '',
+    email: user?.email || '',
+    income: user?.income || 250000,
     occupation: user?.occupation || 'Farmer / Student',
-    age: user?.age || 22,
+    age: user?.age || 25,
     gender: user?.gender || 'Female',
-    category: user?.category || 'OBC',
-    education: user?.education || 'Undergraduate',
+    category: user?.category || 'General',
+    education: user?.education || 'Graduate',
     state: user?.state || 'Maharashtra'
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        income: user.income || 250000,
+        occupation: user.occupation || 'Farmer / Student',
+        age: user.age || 25,
+        gender: user.gender || 'Female',
+        category: user.category || 'General',
+        education: user.education || 'Graduate',
+        state: user.state || 'Maharashtra'
+      });
+    }
+  }, [user]);
 
   const [saved, setSaved] = useState(false);
 
