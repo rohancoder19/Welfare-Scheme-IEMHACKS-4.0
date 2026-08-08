@@ -70,6 +70,37 @@ const Register = () => {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           
+          {/* Account Type Role Selection */}
+          <div className="md:col-span-2 space-y-1.5">
+            <label className="block text-xs font-medium text-gray-300">Register Account As *</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'Citizen' })}
+                className={`py-3 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                  formData.role === 'Citizen' 
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-lg shadow-emerald-500/10' 
+                    : 'bg-gray-950 text-gray-400 border-gray-800 hover:text-white'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                Citizen Applicant
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'Admin' })}
+                className={`py-3 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                  formData.role === 'Admin' || formData.role === 'Officer'
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-lg shadow-amber-500/10' 
+                    : 'bg-gray-950 text-gray-400 border-gray-800 hover:text-white'
+                }`}
+              >
+                <Shield className="w-4 h-4 text-amber-400" />
+                Municipal Officer / Admin
+              </button>
+            </div>
+          </div>
           <div>
             <label className="block text-xs font-medium text-gray-300 mb-1">Full Name *</label>
             <input
