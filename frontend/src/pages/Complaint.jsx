@@ -28,6 +28,21 @@ const Complaint = () => {
   const [error, setError] = useState('');
   const [successComplaint, setSuccessComplaint] = useState(null);
 
+  const fetchStreetAddress = async (lat, lng) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+        headers: { 'Accept-Language': 'en' }
+      });
+      const data = await res.json();
+      if (data && data.display_name) {
+        return data.display_name;
+      }
+    } catch (err) {
+      console.warn('Reverse geocoding error:', err.message);
+    }
+    return `Location (${lat.toFixed(4)}°, ${lng.toFixed(4)}°), Civic Ward`;
+  };
+
   const handleDetectGPS = () => {
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser.');
@@ -37,17 +52,25 @@ const Complaint = () => {
     setError('');
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const { latitude, longitude } = pos.coords;
+        // Temporary feedback while fetching street address
         setFormData((prev) => ({
           ...prev,
           lat: latitude,
           lng: longitude,
-          address: `Real-time GPS (${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E), Active Ward`
+          address: `Fetching street address for (${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°)...`
         }));
         setGpsLoading(false);
         setGpsSuccess(true);
-        setTimeout(() => setGpsSuccess(false), 4000);
+        setTimeout(() => setGpsSuccess(false), 5000);
+
+        // Reverse geocode to proper address
+        const realAddress = await fetchStreetAddress(latitude, longitude);
+        setFormData((prev) => ({
+          ...prev,
+          address: realAddress
+        }));
       },
       (err) => {
         console.warn('GPS Error:', err.message);
@@ -292,10 +315,15 @@ const Complaint = () => {
                 )}
                 <input
                   type="text"
+                  placeholder="Street address, colony, ward name..."
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white"
                 />
+                <div className="flex items-center justify-between text-[11px] text-gray-400 font-mono mt-1 px-1">
+                  <span>GPS Latitude: <strong className="text-sky-400">{formData.lat.toFixed(4)}° N</strong></span>
+                  <span>GPS Longitude: <strong className="text-sky-400">{formData.lng.toFixed(4)}° E</strong></span>
+                </div>
               </div>
 
               <div>
@@ -339,12 +367,17 @@ const Complaint = () => {
                 height="340px" 
                 center={[formData.lat, formData.lng]}
                 initialSelectedPos={[formData.lat, formData.lng]}
-                onSelectLocation={(lat, lng) => {
+                onSelectLocation={async (lat, lng) => {
                   setFormData(prev => ({
                     ...prev,
                     lat,
                     lng,
-                    address: `Pinpoint Location (${lat.toFixed(4)}, ${lng.toFixed(4)}), Civic Ward`
+                    address: `Resolving street address for (${lat.toFixed(4)}°, ${lng.toFixed(4)}°)...`
+                  }));
+                  const realAddress = await fetchStreetAddress(lat, lng);
+                  setFormData(prev => ({
+                    ...prev,
+                    address: realAddress
                   }));
                 }}
               />

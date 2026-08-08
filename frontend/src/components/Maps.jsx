@@ -86,10 +86,26 @@ function MapController({ center, userGpsPos }) {
 
 // Location Picker for clicking on map
 function LocationPicker({ onSelectLocation, selectedPos, setSelectedPos }) {
+  const [streetAddr, setStreetAddr] = useState('');
+
+  useEffect(() => {
+    if (selectedPos && selectedPos[0] && selectedPos[1]) {
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${selectedPos[0]}&lon=${selectedPos[1]}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.display_name) {
+            setStreetAddr(data.display_name);
+          }
+        })
+        .catch(err => console.warn('Geocoding error:', err));
+    }
+  }, [selectedPos]);
+
   useMapEvents({
     click(e) {
       const newPos = [e.latlng.lat, e.latlng.lng];
       setSelectedPos(newPos);
+      setStreetAddr('Fetching address...');
       if (onSelectLocation) {
         onSelectLocation(e.latlng.lat, e.latlng.lng);
       }
@@ -99,10 +115,15 @@ function LocationPicker({ onSelectLocation, selectedPos, setSelectedPos }) {
   return selectedPos ? (
     <Marker position={selectedPos} icon={selectedPinIcon}>
       <Popup>
-        <div className="p-1 font-sans text-xs">
-          <span className="font-bold text-indigo-600 block mb-0.5">📍 Pinpoint Location Selected</span>
-          <span className="text-[10px] text-gray-500 font-mono">
-            Lat: {selectedPos[0].toFixed(4)}, Lng: {selectedPos[1].toFixed(4)}
+        <div className="p-1 font-sans text-xs max-w-xs space-y-1">
+          <span className="font-bold text-indigo-600 block">📍 Pinpoint Location Selected</span>
+          {streetAddr && (
+            <p className="text-[11px] text-gray-700 font-medium leading-snug line-clamp-2">
+              {streetAddr}
+            </p>
+          )}
+          <span className="text-[10px] text-gray-500 font-mono block">
+            GPS Coordinates: {selectedPos[0].toFixed(5)}°, {selectedPos[1].toFixed(5)}°
           </span>
         </div>
       </Popup>
