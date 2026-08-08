@@ -17,8 +17,12 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
-// Connect to Database
-connectDB();
+const { seedInitialUsers } = require('./controllers/authController');
+
+// Connect to Database and seed demo users
+connectDB().then(() => {
+  seedInitialUsers();
+});
 
 const { analyzeComplaintText } = require('./controllers/complaintController');
 

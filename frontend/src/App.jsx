@@ -15,10 +15,18 @@ import Profile from './pages/Profile';
 
 import { useSelector } from 'react-redux';
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useSelector((state) => state.auth);
-  if (!isAuthenticated) {
-    return <Login message="Please register or sign in to access scheme recommendations and grievance tracking." />;
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  if (!isAuthenticated || !user) {
+    return <Login message="Please sign in to access this feature." />;
+  }
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return (
+      <div className="max-w-md mx-auto my-16 p-8 glass-panel rounded-3xl border border-rose-500/30 text-center space-y-4">
+        <h2 className="text-xl font-bold text-rose-400">403 Forbidden</h2>
+        <p className="text-xs text-gray-300">You do not have administrative authorization to access this page.</p>
+      </div>
+    );
   }
   return children;
 };
@@ -37,7 +45,7 @@ function App() {
             <Route path="/welfare-finder" element={<ProtectedRoute><WelfareFinder /></ProtectedRoute>} />
             <Route path="/complaint" element={<ProtectedRoute><Complaint /></ProtectedRoute>} />
             <Route path="/complaint-status" element={<ProtectedRoute><ComplaintStatus /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['Admin', 'Officer']}><AdminDashboard /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           </Routes>
         </main>

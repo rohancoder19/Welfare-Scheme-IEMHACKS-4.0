@@ -456,7 +456,7 @@ const getUserComplaints = async (req, res) => {
       if (complaints.length > 0) return res.json({ success: true, count: complaints.length, complaints });
     }
 
-    const filtered = memoryComplaints.filter(c => c.userId === userId || userId === 'guest_citizen_101' || !userId);
+    const filtered = memoryComplaints.filter(c => c.userId === userId || c.userEmail === req.user?.email);
     res.json({ success: true, count: filtered.length, complaints: filtered });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

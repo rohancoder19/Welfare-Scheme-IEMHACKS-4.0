@@ -32,11 +32,21 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const data = await registerAPI(formData);
+      const payload = {
+        ...formData,
+        email: formData.email.trim().toLowerCase()
+      };
+      const data = await registerAPI(payload);
       if (data.success) {
         dispatch(loginSuccess(data));
         navigate(data.user?.role === 'Admin' || data.user?.role === 'Officer' ? '/admin' : '/welfare-finder');

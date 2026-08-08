@@ -20,34 +20,27 @@ const Login = ({ message }) => {
     setError('');
 
     try {
-      const data = await loginAPI({ email, password });
+      const cleanEmail = email.trim().toLowerCase();
+      const data = await loginAPI({ email: cleanEmail, password });
       if (data.success) {
-        const returnedRole = (data.user?.role || '').toLowerCase();
-        const cleanEmail = (email || '').toLowerCase();
-        const isAdminOrOfficer = 
-          returnedRole === 'admin' || 
-          returnedRole === 'officer' || 
-          cleanEmail.includes('admin') || 
-          cleanEmail.includes('officer') || 
-          cleanEmail.endsWith('.gov.in');
+        dispatch(loginSuccess({ token: data.token, user: data.user }));
 
-        const finalUser = {
-          ...data.user,
-          role: isAdminOrOfficer ? 'Admin' : (data.user?.role || 'Citizen')
-        };
-
-        dispatch(loginSuccess({ token: data.token, user: finalUser }));
-
-        if (isAdminOrOfficer) {
+        if (data.user?.role === 'Admin' || data.user?.role === 'Officer') {
           navigate('/admin');
         } else {
           navigate('/welfare-finder');
         }
       } else {
-        setError(data.message || 'Login failed');
+        setError(data.message || 'Invalid email or password.');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Server authentication error');
+      if (err.response) {
+        setError(err.response.data?.message || 'Invalid email or password.');
+      } else if (err.request) {
+        setError('Unable to connect to the server. Please try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

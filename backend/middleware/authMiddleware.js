@@ -13,13 +13,11 @@ const protect = (req, res, next) => {
         return next();
       }
     } catch (error) {
-      console.warn('[Auth Middleware] Invalid token, proceeding as guest user');
+      return res.status(401).json({ success: false, message: 'Not authorized, token failed' });
     }
   }
 
-  // Fallback for demo guest mode
-  req.user = { id: 'guest_citizen_101', email: 'citizen@gov.in', role: 'Citizen', name: 'Citizen Demo' };
-  next();
+  return res.status(401).json({ success: false, message: 'Not authorized, no token provided' });
 };
 
 module.exports = { protect, JWT_SECRET };
