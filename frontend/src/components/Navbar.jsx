@@ -84,6 +84,20 @@ const Navbar = () => {
                 <FileText className="w-4 h-4 text-sky-400" />
                 Track Status
               </Link>
+
+              {(user?.role === 'Admin' || user?.role === 'Officer') && (
+                <Link
+                  to="/admin"
+                  className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 border transition-all ${
+                    isActive('/admin') 
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-lg shadow-amber-500/10' 
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                  }`}
+                >
+                  <Shield className="w-4 h-4 text-amber-400" />
+                  Admin Dashboard
+                </Link>
+              )}
             </div>
           )}
 
@@ -172,6 +186,16 @@ const Navbar = () => {
               >
                 Track Status
               </Link>
+              {(user?.role === 'Admin' || user?.role === 'Officer') && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-md text-base font-bold text-amber-400 hover:bg-gray-800 flex items-center gap-2"
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin Dashboard
+                </Link>
+              )}
             </>
           )}
           <div className="pt-4 border-t border-gray-800 flex flex-col gap-2">

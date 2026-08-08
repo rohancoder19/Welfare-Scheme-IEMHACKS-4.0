@@ -5,21 +5,8 @@ const storedUser = localStorage.getItem('civic_user') ? JSON.parse(localStorage.
 
 const initialState = {
   token: storedToken || null,
-  user: storedUser || {
-    id: 'user_citizen_1',
-    name: 'Ananya Verma',
-    email: 'ananya@citizen.in',
-    role: 'Citizen',
-    income: 240000,
-    occupation: 'Student / Farmer',
-    age: 22,
-    gender: 'Female',
-    category: 'OBC',
-    education: 'Undergraduate',
-    state: 'Maharashtra',
-    district: 'Pune'
-  },
-  isAuthenticated: true, // Default active demo session
+  user: storedUser || null,
+  isAuthenticated: Boolean(storedToken && storedUser),
   loading: false,
   error: null
 };

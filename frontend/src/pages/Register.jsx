@@ -39,7 +39,7 @@ const Register = () => {
       const data = await registerAPI(formData);
       if (data.success) {
         dispatch(loginSuccess(data));
-        navigate('/welfare-finder');
+        navigate(data.user?.role === 'Admin' || data.user?.role === 'Officer' ? '/admin' : '/welfare-finder');
       } else {
         setError(data.message || 'Registration failed');
       }
