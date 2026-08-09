@@ -139,62 +139,36 @@ def generate_chatbot_response(user_query: str, conversation_history: list = None
     retrieved_scheme_names = []
     context_chunks = []
 
-    # 1. Direct RAG Vector Retrieval from ChromaDB with State/Demographic filtering
+    # 1. Hybrid RAG Retrieval (Keyword Token Matching + Semantic Vector Search)
     if rag_engine:
         try:
-            from ingestion.ingest import generate_embedding
-            query_vector = generate_embedding(user_query)
-            count = rag_engine.collection.count()
-            if count > 0:
-                results = rag_engine.collection.query(
-                    query_embeddings=[query_vector],
-                    n_results=min(15, count),
-                    include=["documents", "metadatas"]
+            candidates = rag_engine.search_schemes_hybrid(user_query, top_k=6, detected_state=detected_state)
+            for c in candidates:
+                name = c.get("scheme_name", "Government Scheme")
+                state = c.get("state", "All India")
+                gov_level = c.get("government_level", "State")
+                gender = str(c.get("gender", "All")).strip()
+
+                if is_male and gender.lower() in ["female", "women", "girls"]:
+                    continue
+
+                if name not in retrieved_scheme_names:
+                    retrieved_scheme_names.append(name)
+
+                chunk_str = (
+                    f"Scheme Name: {name}\n"
+                    f"State: {state} (Level: {gov_level})\n"
+                    f"Details: {c.get('details', '')}\n"
+                    f"Benefits: {c.get('benefits', '')}\n"
+                    f"Eligibility: {c.get('eligibility_text', '')}\n"
+                    f"Documents Required: {c.get('documents', '')}\n"
+                    f"Application Process: {c.get('application_url', '')}"
                 )
-                if results and "metadatas" in results and results["metadatas"]:
-                    metas = results["metadatas"][0]
-                    docs = results.get("documents", [[]])[0]
-                    
-                    for meta, doc in zip(metas, docs):
-                        name = meta.get("scheme_name") or meta.get("schemeName") or "Government Scheme"
-                        state = meta.get("state", "All India")
-                        gov_level = meta.get("government_level", meta.get("governmentLevel", "State"))
-                        gender = str(meta.get("gender", "All")).strip()
-                        
-                        # State Filter: Prioritize matched state or Central schemes, exclude other state exclusive schemes
-                        if detected_state and gov_level.capitalize() == "State":
-                            if state.lower() not in ["all india", "all", "central", "national", "unknown"]:
-                                if detected_state.lower() not in state.lower() and state.lower() not in detected_state.lower():
-                                    continue
+                context_chunks.append(chunk_str)
 
-                        # Gender Filter
-                        if is_male and gender.lower() in ["female", "women", "girls"]:
-                            continue
-
-                        if name not in retrieved_scheme_names:
-                            retrieved_scheme_names.append(name)
-                        
-                        benefits = meta.get("benefits", "")
-                        eligibility = meta.get("eligibility_text", meta.get("eligibility", ""))
-                        documents = meta.get("documents", "")
-                        app_url = meta.get("application_url", meta.get("application", ""))
-                        
-                        chunk_str = (
-                            f"Scheme Name: {name}\n"
-                            f"State: {state} (Level: {gov_level})\n"
-                            f"Details: {doc}\n"
-                            f"Benefits: {benefits}\n"
-                            f"Eligibility: {eligibility}\n"
-                            f"Documents Required: {documents}\n"
-                            f"Application Process: {app_url}"
-                        )
-                        context_chunks.append(chunk_str)
-                        if len(context_chunks) >= 6:
-                            break
-
-                    retrieved_context = "\n\n---\n\n".join(context_chunks)
+            retrieved_context = "\n\n---\n\n".join(context_chunks)
         except Exception as e:
-            print(f"[Chatbot Vector Search Error]: {e}")
+            print(f"[Chatbot Hybrid Search Error]: {e}")
 
     # Build Grounded System Prompt
     system_prompt = (

@@ -94,6 +94,121 @@ class RAGEngine:
 
         return candidates
 
+    def search_schemes_hybrid(self, query: str, top_k: int = 8, detected_state: str = "") -> List[Dict[str, Any]]:
+        """
+        Hybrid RAG Search across 3,400 schemes dataset:
+        1. Exact & Partial Keyword Token Matching (schemeName, details, benefits, tags, state, category).
+        2. ChromaDB Semantic Vector Query.
+        3. Merge, rank by keyword relevance + vector score, and return top_k candidates.
+        """
+        q_clean = query.lower().strip()
+        tokens = [t for t in re.findall(r'\w+', q_clean) if len(t) >= 3 and t not in ['what', 'is', 'the', 'are', 'for', 'can', 'get', 'how', 'which', 'about', 'tell', 'available', 'scheme', 'schemes', 'from']]
+        
+        candidates = []
+        seen_names = set()
+
+        # Phase 1: Keyword & Token Search in processed_welfare_schemes.json
+        processed_file = os.path.join(DOCUMENTS_DIR, "..", "processed_welfare_schemes.json")
+        if os.path.exists(processed_file):
+            try:
+                with open(processed_file, 'r', encoding='utf-8') as f:
+                    all_schemes = json.load(f)
+                
+                kw_matches = []
+                for scheme in all_schemes:
+                    name = scheme.get("schemeName", "")
+                    details = scheme.get("details", "")
+                    benefits = scheme.get("benefits", "")
+                    tags = scheme.get("tags", "")
+                    state = scheme.get("state", "All India")
+                    gov_level = scheme.get("governmentLevel", "State")
+                    if isinstance(tags, list):
+                        tags = " ".join(tags)
+                    
+                    full_text = f"{name} {details} {benefits} {tags} {state}".lower()
+                    
+                    # State filter
+                    if detected_state and str(gov_level).capitalize() == "State":
+                        if state.lower() not in ["all india", "all", "central", "national", "unknown"]:
+                            if detected_state.lower() not in state.lower() and state.lower() not in detected_state.lower():
+                                continue
+                    
+                    score = 0
+                    for token in tokens:
+                        if token in name.lower():
+                            score += 15
+                        elif token in full_text:
+                            score += 3
+                    
+                    if score > 0:
+                        kw_matches.append((score, scheme))
+
+                kw_matches.sort(key=lambda x: x[0], reverse=True)
+                for score, scheme in kw_matches[:top_k]:
+                    name = scheme.get("schemeName", "")
+                    if name not in seen_names:
+                        seen_names.add(name)
+                        crit = scheme.get("eligibilityCriteria", {})
+                        if not isinstance(crit, dict):
+                            crit = {}
+                        candidates.append({
+                            "scheme_name": name,
+                            "state": scheme.get("state", "All India"),
+                            "government_level": scheme.get("governmentLevel", "State"),
+                            "details": scheme.get("details", ""),
+                            "benefits": scheme.get("benefits", ""),
+                            "eligibility_text": scheme.get("eligibilityText", ""),
+                            "documents": scheme.get("documents", ""),
+                            "application_url": scheme.get("application", ""),
+                            "gender": crit.get("gender", "All"),
+                            "match_score": score
+                        })
+            except Exception as e:
+                print(f"[Hybrid Keyword Search Error]: {e}")
+
+        # Phase 2: Vector Query from ChromaDB
+        if self.collection.count() > 0 and len(candidates) < top_k:
+            try:
+                query_vector = generate_embedding(query)
+                results = self.collection.query(
+                    query_embeddings=[query_vector],
+                    n_results=min(15, self.collection.count()),
+                    include=["documents", "metadatas"]
+                )
+                if results and "metadatas" in results and results["metadatas"]:
+                    metas = results["metadatas"][0]
+                    docs = results.get("documents", [[]])[0]
+                    for meta, doc in zip(metas, docs):
+                        name = meta.get("scheme_name") or meta.get("schemeName") or "Government Scheme"
+                        state = meta.get("state", "All India")
+                        gov_level = meta.get("government_level", meta.get("governmentLevel", "State"))
+                        
+                        if detected_state and str(gov_level).capitalize() == "State":
+                            if state.lower() not in ["all india", "all", "central", "national", "unknown"]:
+                                if detected_state.lower() not in state.lower() and state.lower() not in detected_state.lower():
+                                    continue
+
+                        if name not in seen_names:
+                            seen_names.add(name)
+                            candidates.append({
+                                "scheme_name": name,
+                                "state": state,
+                                "government_level": gov_level,
+                                "details": doc,
+                                "benefits": meta.get("benefits", ""),
+                                "eligibility_text": meta.get("eligibility_text", ""),
+                                "documents": meta.get("documents", ""),
+                                "application_url": meta.get("application_url", ""),
+                                "gender": meta.get("gender", "All"),
+                                "match_score": 1
+                            })
+                            if len(candidates) >= top_k:
+                                break
+            except Exception as e:
+                print(f"[Hybrid Vector Search Error]: {e}")
+
+        return candidates[:top_k]
+
     def evaluate_hard_eligibility(self, user_profile: dict, meta: dict, doc_text: str = "") -> dict:
         """
         Strict Hard Eligibility Filter:
