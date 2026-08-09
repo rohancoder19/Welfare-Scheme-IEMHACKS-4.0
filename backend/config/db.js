@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 let isInMemoryMode = false;
 
 const connectDB = async () => {
-  const connString = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/civic_welfare_db';
+  const connString = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/civic_welfare_db';
   try {
     const conn = await mongoose.connect(connString, {
       serverSelectionTimeoutMS: 2000

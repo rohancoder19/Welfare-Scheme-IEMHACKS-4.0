@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const rawMlUrl = (process.env.PYTHON_ML_URL || 'http://127.0.0.1:8000').trim();
+const rawMlUrl = (process.env.ML_SERVICE_URL || process.env.PYTHON_ML_URL || 'http://127.0.0.1:8000').trim();
 const PYTHON_ML_URL = (rawMlUrl.startsWith('http://') || rawMlUrl.startsWith('https://'))
   ? rawMlUrl
   : `https://${rawMlUrl}`;
