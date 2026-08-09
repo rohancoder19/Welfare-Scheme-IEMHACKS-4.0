@@ -10,7 +10,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL)
+  ? (process.env.CORS_ORIGINS || process.env.FRONTEND_URL).split(',').map(o => o.trim())
+  : ['*'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -34,14 +48,17 @@ app.use('/api/complaints', require('./routes/complaintRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/chatbot', require('./routes/chatbotRoutes'));
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
+// Health check endpoints
+const healthHandler = (req, res) => {
   res.json({
     status: 'healthy',
     service: 'Civic Welfare & Grievance Express Backend API',
     time: new Date().toISOString()
   });
-});
+};
+
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 
 app.listen(PORT, () => {
   console.log(`[Express API] Civic Welfare & Grievance Server running on http://127.0.0.1:${PORT}`);

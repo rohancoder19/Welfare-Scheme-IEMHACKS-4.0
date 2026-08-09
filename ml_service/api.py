@@ -26,9 +26,12 @@ app = FastAPI(
     description="FastAPI service for Scheme Recommendation, Grievance NLP Classification, Priority Prediction & AI Chatbot"
 )
 
+cors_origins_env = os.getenv("CORS_ORIGINS") or os.getenv("FRONTEND_URL")
+origins = [o.strip() for o in cors_origins_env.split(",")] if cors_origins_env else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -149,4 +152,5 @@ async def upload_and_ingest_csv(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
