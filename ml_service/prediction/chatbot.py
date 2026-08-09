@@ -79,24 +79,25 @@ def query_gemini_llm(prompt: str) -> str:
         print(f"[Gemini Legacy SDK Error]: {e}")
 
     # 3. Direct HTTP REST API via urllib.request (Zero SDK dependency fallback)
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-        headers = {"Content-Type": "application/json"}
-        payload = json.dumps({
-            "contents": [{
-                "parts": [{"text": prompt}]
-            }]
-        }).encode('utf-8')
-        req = urllib.request.Request(url, data=payload, headers=headers, method='POST')
-        with urllib.request.urlopen(req, timeout=8) as response:
-            res_data = json.loads(response.read().decode('utf-8'))
-            candidates = res_data.get("candidates", [])
-            if candidates and "content" in candidates[0]:
-                parts = candidates[0]["content"].get("parts", [])
-                if parts and "text" in parts[0]:
-                    return parts[0]["text"].strip()
-    except Exception as e:
-        print(f"[Gemini REST HTTP Error]: {e}")
+    for model_name in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+            headers = {"Content-Type": "application/json"}
+            payload = json.dumps({
+                "contents": [{
+                    "parts": [{"text": prompt}]
+                }]
+            }).encode('utf-8')
+            req = urllib.request.Request(url, data=payload, headers=headers, method='POST')
+            with urllib.request.urlopen(req, timeout=8) as response:
+                res_data = json.loads(response.read().decode('utf-8'))
+                candidates = res_data.get("candidates", [])
+                if candidates and "content" in candidates[0]:
+                    parts = candidates[0]["content"].get("parts", [])
+                    if parts and "text" in parts[0]:
+                        return parts[0]["text"].strip()
+        except Exception:
+            continue
 
     return ""
 
