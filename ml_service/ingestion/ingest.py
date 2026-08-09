@@ -221,12 +221,25 @@ class SchemeIngestionPipeline:
                 metas_batch.append(metadata)
 
                 if len(ids_batch) >= 100:
-                    self.collection.upsert(
-                        ids=ids_batch,
-                        embeddings=embeddings_batch,
-                        documents=docs_batch,
-                        metadatas=metas_batch
-                    )
+                    try:
+                        self.collection.upsert(
+                            ids=ids_batch,
+                            embeddings=embeddings_batch,
+                            documents=docs_batch,
+                            metadatas=metas_batch
+                        )
+                    except Exception as e:
+                        import time
+                        time.sleep(0.2)
+                        try:
+                            self.collection.upsert(
+                                ids=ids_batch,
+                                embeddings=embeddings_batch,
+                                documents=docs_batch,
+                                metadatas=metas_batch
+                            )
+                        except Exception as e2:
+                            print(f"[ChromaDB Batch Upsert Warning]: {e2}")
                     ids_batch, embeddings_batch, docs_batch, metas_batch = [], [], [], []
 
         if ids_batch:
