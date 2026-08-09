@@ -49,10 +49,11 @@ DEFAULT_KNOWLEDGE_BASE = [
 ]
 
 def query_gemini_llm(prompt: str) -> str:
-    """Send prompt to Gemini Generative AI API using official SDK or fallback SDK."""
-    if not GEMINI_API_KEY:
+    """Send prompt to Gemini Generative AI API using official SDK, legacy SDK, or direct HTTP REST API."""
+    if not GEMINI_API_KEY or GEMINI_API_KEY.startswith("your_"):
         return ""
-    # Try official google.genai SDK
+
+    # 1. Try official google.genai SDK
     try:
         from google import genai
         client = genai.Client(api_key=GEMINI_API_KEY)
@@ -66,7 +67,7 @@ def query_gemini_llm(prompt: str) -> str:
     except Exception as e:
         print(f"[Gemini GenAI SDK Error]: {e}")
 
-    # Fallback to google.generativeai legacy SDK if available
+    # 2. Try google.generativeai legacy SDK
     try:
         import google.generativeai as genai_legacy
         genai_legacy.configure(api_key=GEMINI_API_KEY)
@@ -76,6 +77,26 @@ def query_gemini_llm(prompt: str) -> str:
             return response.text.strip()
     except Exception as e:
         print(f"[Gemini Legacy SDK Error]: {e}")
+
+    # 3. Direct HTTP REST API via urllib.request (Zero SDK dependency fallback)
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+        headers = {"Content-Type": "application/json"}
+        payload = json.dumps({
+            "contents": [{
+                "parts": [{"text": prompt}]
+            }]
+        }).encode('utf-8')
+        req = urllib.request.Request(url, data=payload, headers=headers, method='POST')
+        with urllib.request.urlopen(req, timeout=8) as response:
+            res_data = json.loads(response.read().decode('utf-8'))
+            candidates = res_data.get("candidates", [])
+            if candidates and "content" in candidates[0]:
+                parts = candidates[0]["content"].get("parts", [])
+                if parts and "text" in parts[0]:
+                    return parts[0]["text"].strip()
+    except Exception as e:
+        print(f"[Gemini REST HTTP Error]: {e}")
 
     return ""
 
