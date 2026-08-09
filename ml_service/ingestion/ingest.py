@@ -181,7 +181,7 @@ class SchemeIngestionPipeline:
                 chunks = [full_text]
 
             for idx, chunk in enumerate(chunks[:2]):
-                doc_id = f"{scheme_id}_chunk_{idx}"
+                doc_id = f"{scheme_id}_{count}_chunk_{idx}"
                 embedding = generate_embedding(chunk)
                 
                 metadata = {
