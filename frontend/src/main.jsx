@@ -7,7 +7,8 @@ import App from './App.jsx'
 import './index.css'
 
 if (import.meta.env.VITE_API_URL) {
-  axios.defaults.baseURL = import.meta.env.VITE_API_URL;
+  const url = import.meta.env.VITE_API_URL.trim();
+  axios.defaults.baseURL = (url.startsWith('http://') || url.startsWith('https://')) ? url : `https://${url}`;
 }
 
 

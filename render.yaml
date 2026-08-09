@@ -20,19 +20,19 @@ services:
         fromService:
           type: web
           name: welfare-scheme-ml
-          property: url
+          property: host
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
         fromService:
           type: web
           name: welfare-scheme-frontend
-          property: url
+          property: host
       - key: CORS_ORIGINS
         fromService:
           type: web
           name: welfare-scheme-frontend
-          property: url
+          property: host
 
   # Python FastAPI ML Microservice
   - type: web
@@ -49,12 +49,12 @@ services:
         fromService:
           type: web
           name: welfare-scheme-frontend
-          property: url
+          property: host
       - key: CORS_ORIGINS
         fromService:
           type: web
           name: welfare-scheme-frontend
-          property: url
+          property: host
 
   # React / Vite Static Site Frontend
   - type: web
@@ -72,7 +72,7 @@ services:
         fromService:
           type: web
           name: welfare-scheme-backend
-          property: url
+          property: host
 
 databases:
   # Render Managed PostgreSQL Database

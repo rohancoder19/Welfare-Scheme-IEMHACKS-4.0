@@ -10,9 +10,15 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
-const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL)
+const rawOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL)
   ? (process.env.CORS_ORIGINS || process.env.FRONTEND_URL).split(',').map(o => o.trim())
   : ['*'];
+
+const allowedOrigins = rawOrigins.flatMap(o => {
+  if (o === '*') return ['*'];
+  if (o.startsWith('http://') || o.startsWith('https://')) return [o];
+  return [`https://${o}`, `http://${o}`, o];
+});
 
 app.use(cors({
   origin: (origin, callback) => {

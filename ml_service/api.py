@@ -27,7 +27,18 @@ app = FastAPI(
 )
 
 cors_origins_env = os.getenv("CORS_ORIGINS") or os.getenv("FRONTEND_URL")
-origins = [o.strip() for o in cors_origins_env.split(",")] if cors_origins_env else ["*"]
+if cors_origins_env:
+    raw_origins = [o.strip() for o in cors_origins_env.split(",")]
+    origins = []
+    for o in raw_origins:
+        if o == "*":
+            origins.append("*")
+        elif o.startswith("http://") or o.startswith("https://"):
+            origins.append(o)
+        else:
+            origins.extend([f"https://{o}", f"http://{o}", o])
+else:
+    origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
