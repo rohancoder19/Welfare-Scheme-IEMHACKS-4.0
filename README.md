@@ -14,6 +14,21 @@ A full-stack AI platform integrating a **React.js Frontend**, **Node.js + Expres
 
 ## 🏛️ System Architecture Overview
 
+![3D System Architecture Diagram](docs/assets/system_architecture_3d.png)
+
+### 🧊 3D Tiered Architectural Layers
+
+| Layer | Component | Description & Key Technologies |
+| :--- | :--- | :--- |
+| **Layer 1: User Experience** | Citizen & Officer Interfaces | Web Browser client accessing responsive forms, AI assistant chat, and grievance tracking |
+| **Layer 2: Frontend Client** | React.js Application | Vite, Tailwind CSS, Lucide Icons, Glassmorphism UI, Redux State Management |
+| **Layer 3: Backend Services** | Express.js API Server | Node.js, JWT Authentication, MongoDB (User profiles, Complaints, Scheme metadata) |
+| **Layer 4: AI & ML Engine** | FastAPI Microservice | Python FastAPI, ChromaDB Vector DB (`text-embedding-004`), Gemini 2.5 Flash RAG Engine, 3,400 Hard Eligibility Filter |
+
+---
+
+### 🔄 End-to-End Data & Eligibility Pipeline
+
 ```
                          USER / CITIZEN
                                │
