@@ -41,6 +41,8 @@ services:
           type: web
           name: welfare-scheme-frontend
           property: host
+      - key: CORS_ORIGINS
+        value: https://welfare-scheme-frontend.onrender.com,https://welfare-scheme-api.onrender.com
 
   # 3. React / Vite Static Site Frontend
   - type: web

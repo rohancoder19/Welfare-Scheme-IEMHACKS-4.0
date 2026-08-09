@@ -26,19 +26,33 @@ app = FastAPI(
     description="FastAPI service for Scheme Recommendation, Grievance NLP Classification, Priority Prediction & AI Chatbot"
 )
 
+default_origins = [
+    "https://welfare-scheme-frontend.onrender.com",
+    "https://welfare-scheme-api.onrender.com",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:5000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5000"
+]
+
 cors_origins_env = os.getenv("CORS_ORIGINS") or os.getenv("FRONTEND_URL")
 if cors_origins_env:
-    raw_origins = [o.strip() for o in cors_origins_env.split(",")]
-    origins = []
-    for o in raw_origins:
-        if o == "*":
-            origins.append("*")
-        elif o.startswith("http://") or o.startswith("https://"):
-            origins.append(o)
-        else:
-            origins.extend([f"https://{o}", f"http://{o}", o])
+    raw_origins = default_origins + [o.strip() for o in cors_origins_env.split(",") if o.strip()]
 else:
-    origins = ["*"]
+    raw_origins = default_origins
+
+origins = []
+for o in raw_origins:
+    if o == "*":
+        origins.append("*")
+    elif o.startswith("http://") or o.startswith("https://"):
+        origins.append(o)
+    else:
+        origins.extend([f"https://{o}", f"http://{o}", o])
+
+origins = list(set(origins))
 
 app.add_middleware(
     CORSMiddleware,
@@ -131,15 +145,31 @@ def analyze_complaint(req: ComplaintAnalysisRequest):
 
 @app.post("/chat")
 def chat_with_bot(req: ChatRequest):
+    if not req.message or not req.message.strip():
+        raise HTTPException(status_code=400, detail="Message text is required and cannot be empty.")
+    
+    clean_msg = req.message.strip()
+    if len(clean_msg) > 2000:
+        raise HTTPException(status_code=400, detail="Message is too long. Please limit your query to 2000 characters.")
+
     try:
-        res = generate_chatbot_response(req.message)
+        res = generate_chatbot_response(clean_msg)
         return {
             "success": True,
-            "reply": res["reply"],
-            "source": res["source"],
+            "reply": res.get("reply", "No reply generated"),
+            "source": res.get("source", "Civic AI Assistant"),
+            "suggestedActions": res.get("suggestedActions", [])
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[FastAPI Chatbot Exception]: {e}")
+        return {
+            "success": False,
+            "reply": "AI Assistant is temporarily unavailable. Please try again.",
+            "source": "Civic Assistant Service",
+            "suggestedActions": ["Find Schemes", "File Complaint", "Track Grievances"]
+        }
 
 @app.post("/ingest-csv")
 async def upload_and_ingest_csv(file: UploadFile = File(...)):

@@ -49,20 +49,34 @@ DEFAULT_KNOWLEDGE_BASE = [
 ]
 
 def query_gemini_llm(prompt: str) -> str:
-    """Send prompt to Gemini Generative AI API using official SDK."""
+    """Send prompt to Gemini Generative AI API using official SDK or fallback SDK."""
     if not GEMINI_API_KEY:
         return ""
+    # Try official google.genai SDK
     try:
         from google import genai
         client = genai.Client(api_key=GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-        )
+        for m in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]:
+            try:
+                response = client.models.generate_content(model=m, contents=prompt)
+                if response and response.text:
+                    return response.text.strip()
+            except Exception:
+                continue
+    except Exception as e:
+        print(f"[Gemini GenAI SDK Error]: {e}")
+
+    # Fallback to google.generativeai legacy SDK if available
+    try:
+        import google.generativeai as genai_legacy
+        genai_legacy.configure(api_key=GEMINI_API_KEY)
+        model = genai_legacy.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(prompt)
         if response and response.text:
             return response.text.strip()
     except Exception as e:
-        print(f"[Gemini AI Chatbot Error]: {e}")
+        print(f"[Gemini Legacy SDK Error]: {e}")
+
     return ""
 
 def generate_chatbot_response(user_query: str) -> dict:

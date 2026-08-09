@@ -27,13 +27,22 @@ class RAGEngine:
             metadata={"hnsw:space": "cosine"}
         )
         
-        # Ensure database is populated if empty
+        # Ensure database is populated if empty (e.g. fresh container deploy on Render)
         if self.collection.count() == 0:
             print("ChromaDB collection empty. Running automatic ingestion pipeline...")
-            pipeline = SchemeIngestionPipeline(db_dir=self.db_dir)
-            json_path = os.path.join(DOCUMENTS_DIR, "sample_schemes.json")
-            if os.path.exists(json_path):
-                pipeline.ingest_structured_json(json_path)
+            try:
+                pipeline = SchemeIngestionPipeline(db_dir=self.db_dir)
+                json_path = os.path.join(DOCUMENTS_DIR, "sample_schemes.json")
+                if os.path.exists(json_path):
+                    pipeline.ingest_structured_json(json_path)
+                
+                csv_path = os.path.join(DOCUMENTS_DIR, "sample_schemes.csv")
+                if os.path.exists(csv_path):
+                    pipeline.ingest_csv_documents(csv_path)
+                
+                print(f"[RAG Engine Startup] Auto-ingested ChromaDB collection. Total vectors: {self.collection.count()}")
+            except Exception as e:
+                print(f"[RAG Engine Auto-Ingest Error]: {e}")
 
     def retrieve_candidates(self, user_profile: dict, top_k: int = 15) -> List[Dict[str, Any]]:
         """Retrieve candidate government schemes using semantic vector search in ChromaDB."""

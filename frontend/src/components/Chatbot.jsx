@@ -40,14 +40,24 @@ const Chatbot = () => {
 
     try {
       const res = await sendChatMessageAPI(query);
-      if (res.success) {
+      if (res && res.reply) {
         setMessages(prev => [
           ...prev,
           {
             sender: 'bot',
             text: res.reply,
-            source: res.source,
+            source: res.source || 'Civic AI Assistant',
             suggestedActions: res.suggestedActions || []
+          }
+        ]);
+      } else {
+        setMessages(prev => [
+          ...prev,
+          {
+            sender: 'bot',
+            text: 'AI Assistant is temporarily unavailable. Please try again.',
+            source: 'Civic Assistant',
+            suggestedActions: ['Find Eligible Schemes', 'Report Pothole/Water Issue', 'Ayushman Hospital List']
           }
         ]);
       }
@@ -56,8 +66,9 @@ const Chatbot = () => {
         ...prev,
         {
           sender: 'bot',
-          text: 'I can assist you with government scheme eligibility (like PM Awas Yojana, PM Kisan, Ayushman Bharat) or tracking civic grievance complaints.',
-          suggestedActions: ['Scheme Finder', 'File Grievance']
+          text: 'AI Assistant is temporarily unavailable. Please try again.',
+          source: 'Civic Assistant',
+          suggestedActions: ['Find Eligible Schemes', 'Report Pothole/Water Issue', 'Ayushman Hospital List']
         }
       ]);
     } finally {

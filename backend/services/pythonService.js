@@ -148,24 +148,57 @@ class PythonMLService {
   }
 
   /**
+   * Health check to verify Node backend can reach Python ML microservice
+   */
+  async checkHealth() {
+    try {
+      const response = await axios.get(`${PYTHON_ML_URL}/health`, { timeout: 3000 });
+      return {
+        connected: true,
+        status: response.data?.status || 'healthy',
+        mlUrl: PYTHON_ML_URL
+      };
+    } catch (error) {
+      return {
+        connected: false,
+        status: 'unreachable',
+        error: error.message,
+        mlUrl: PYTHON_ML_URL
+      };
+    }
+  }
+
+  /**
    * Send question to Python Chatbot Engine.
    */
   async queryChatbot(message) {
+    console.log('[CHATBOT] Request received');
     try {
+      console.log(`[CHATBOT] Calling ML service: ${PYTHON_ML_URL}/chat`);
       const response = await axios.post(`${PYTHON_ML_URL}/chat`, {
         message
       }, { timeout: 12000 });
 
-      if (response.data && response.data.success) {
-        return response.data;
+      if (response.data && (response.data.success || response.data.reply)) {
+        console.log('[CHATBOT] ML response received');
+        const resObj = {
+          success: true,
+          reply: response.data.reply || response.data.message || "No reply generated",
+          source: response.data.source || "Civic AI Assistant",
+          suggestedActions: response.data.suggestedActions || ["Find Schemes", "File Complaint", "Track Grievances"]
+        };
+        console.log('[CHATBOT] Response returned to frontend');
+        return resObj;
       }
     } catch (error) {
-      console.warn(`[Python ML Service] Fallback triggered for queryChatbot: ${error.message}`);
+      console.warn(`[CHATBOT] Python ML Service unreachable or error: ${error.message}`);
     }
 
+    console.log('[CHATBOT] Response returned to frontend (Fallback)');
     return {
-      reply: "Welcome to Civic Welfare Assistant! I can help you find eligible schemes, guide document requirements, or submit civic grievance complaints.",
-      source: "Express Assistant Service",
+      success: true,
+      reply: "AI Assistant is temporarily unavailable. Please try again.",
+      source: "Civic Assistant Service",
       suggestedActions: ["Find Schemes", "File Complaint", "Track Grievances"]
     };
   }
