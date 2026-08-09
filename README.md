@@ -5,6 +5,8 @@
 > - **Backend API Server (Express.js):** [https://welfare-scheme-api.onrender.com](https://welfare-scheme-api.onrender.com)
 > - **ML Microservice (FastAPI + ChromaDB):** [https://welfare-scheme-ml.onrender.com](https://welfare-scheme-ml.onrender.com)
 
+![Welfare Scheme Platform Preview](docs/assets/welfare_scheme_portal.png)
+
 A full-stack AI platform integrating a **React.js Frontend**, **Node.js + Express.js API Server**, **MongoDB Models**, and a **Python FastAPI Microservice** powered by **ChromaDB Vector Database** and **Gemini 2.5 Flash AI RAG Pipeline** with an Authoritative Hard Eligibility Engine over **3,400 Government Schemes**.
 
 ---
