@@ -115,10 +115,21 @@ class SchemeIngestionPipeline:
         self.db_dir = db_dir
         os.makedirs(self.db_dir, exist_ok=True)
         self.chroma_client = chromadb.PersistentClient(path=self.db_dir)
-        self.collection = self.chroma_client.get_or_create_collection(
-            name="government_schemes",
-            metadata={"hnsw:space": "cosine"}
-        )
+        try:
+            self.collection = self.chroma_client.get_or_create_collection(
+                name="government_schemes",
+                metadata={"hnsw:space": "cosine"}
+            )
+        except Exception as e:
+            print(f"[ChromaDB Init Warning]: {e}. Attempting clean re-initialization...")
+            try:
+                self.chroma_client.delete_collection("government_schemes")
+            except Exception:
+                pass
+            self.collection = self.chroma_client.get_or_create_collection(
+                name="government_schemes",
+                metadata={"hnsw:space": "cosine"}
+            )
 
     def ingest_structured_json(self, json_filepath: str):
         """Ingest schemes from structured JSON file into ChromaDB."""
