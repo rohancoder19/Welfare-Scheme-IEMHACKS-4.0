@@ -5,6 +5,8 @@
 > - **Backend API Server (Express.js):** [https://welfare-scheme-api.onrender.com](https://welfare-scheme-api.onrender.com)
 > - **ML Microservice (FastAPI + ChromaDB):** [https://welfare-scheme-ml.onrender.com](https://welfare-scheme-ml.onrender.com)
 > - **VIDEO DEMO(YOUTUBE):** [https://youtu.be/lrghmKdqY_o]
+>
+> ⚡ *Note for Judges: Deployed on Render Free Tier. If the microservices are sleeping due to inactivity, initial page load or AI features may take 30-45 seconds to spin up on cold start.*
 
 ![Welfare Scheme Platform Preview](docs/assets/welfare_scheme_portal.png)
 
