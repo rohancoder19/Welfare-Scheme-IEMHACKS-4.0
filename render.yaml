@@ -20,7 +20,10 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        sync: false
+        fromService:
+          type: web
+          name: welfare-scheme-frontend
+          property: host
 
   # 2. Python FastAPI ML Microservice
   - type: web
@@ -34,4 +37,25 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: FRONTEND_URL
-        sync: false
+        fromService:
+          type: web
+          name: welfare-scheme-frontend
+          property: host
+
+  # 3. React / Vite Static Site Frontend
+  - type: web
+    name: welfare-scheme-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: welfare-scheme-api
+          property: host
