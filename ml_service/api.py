@@ -86,6 +86,8 @@ class ComplaintAnalysisRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
+    conversationHistory: Optional[List[Dict[str, Any]]] = []
+    userProfile: Optional[Dict[str, Any]] = None
 
 @app.get("/")
 @app.get("/health")
@@ -97,6 +99,20 @@ def health_check():
             "eligibility": eligibility_predictor.model is not None,
             "complaintClassifier": complaint_classifier.model is not None
         }
+    }
+
+@app.get("/api/chatbot/health")
+def chatbot_health_diagnostic():
+    chroma_count = rag_engine.collection.count() if rag_engine else 0
+    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    has_gemini = bool(gemini_key and not gemini_key.startswith("your_"))
+    return {
+        "status": "healthy" if chroma_count > 0 else "degraded",
+        "geminiKeyConfigured": has_gemini,
+        "chromaDbConnected": rag_engine is not None,
+        "collectionName": "government_schemes",
+        "documentCount": chroma_count,
+        "service": "FastAPI ML Chatbot Diagnostic"
     }
 
 @app.post("/predict-eligibility")
@@ -153,11 +169,16 @@ def chat_with_bot(req: ChatRequest):
         raise HTTPException(status_code=400, detail="Message is too long. Please limit your query to 2000 characters.")
 
     try:
-        res = generate_chatbot_response(clean_msg)
+        res = generate_chatbot_response(
+            user_query=clean_msg,
+            conversation_history=req.conversationHistory,
+            user_profile=req.userProfile
+        )
         return {
             "success": True,
             "reply": res.get("reply", "No reply generated"),
             "source": res.get("source", "Civic AI Assistant"),
+            "sources": res.get("sources", []),
             "suggestedActions": res.get("suggestedActions", [])
         }
     except HTTPException:
@@ -168,6 +189,7 @@ def chat_with_bot(req: ChatRequest):
             "success": False,
             "reply": "AI Assistant is temporarily unavailable. Please try again.",
             "source": "Civic Assistant Service",
+            "sources": [],
             "suggestedActions": ["Find Schemes", "File Complaint", "Track Grievances"]
         }
 

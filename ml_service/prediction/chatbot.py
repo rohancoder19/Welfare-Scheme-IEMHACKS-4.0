@@ -100,23 +100,46 @@ def query_gemini_llm(prompt: str) -> str:
 
     return ""
 
-def generate_chatbot_response(user_query: str) -> dict:
+INDIAN_STATES = [
+    "west bengal", "maharashtra", "delhi", "karnataka", "tamil nadu", "kerala",
+    "gujarat", "uttar pradesh", "bihar", "madhya pradesh", "rajasthan", "punjab",
+    "haryana", "andhra pradesh", "telangana", "odisha", "assam", "jharkhand", "chhattisgarh"
+]
+
+def extract_state_from_query(query: str, user_profile: dict = None) -> str:
+    q_lower = query.lower()
+    for state in INDIAN_STATES:
+        if state in q_lower:
+            return state.title()
+    if user_profile and user_profile.get("state"):
+        st = str(user_profile.get("state")).strip()
+        if st.lower() not in ["all india", "all", "central"]:
+            return st.title()
+    return ""
+
+def generate_chatbot_response(user_query: str, conversation_history: list = None, user_profile: dict = None) -> dict:
     """
-    RAG-Powered AI Chatbot Engine for Government Schemes & Civic Grievances.
-    Retrieves vector scheme content from ChromaDB and generates intelligent AI answers using Gemini.
+    State-Aware RAG AI Chatbot Engine for 3,400+ Government Schemes & Civic Grievances.
+    Retrieves vector scheme content from ChromaDB, filters by State & Demographics, and generates grounded AI answers using Gemini.
     """
     query_lower = user_query.lower().strip()
     if not query_lower:
         return {
-            "reply": "Hello! How can I assist you today? You can ask me about government schemes, eligibility criteria, required documents, or filing civic grievances.",
+            "reply": "Namaste! How can I assist you today? Ask me about government welfare schemes, eligibility criteria, required documents, or filing civic grievances.",
             "source": "Civic AI Assistant",
+            "sources": [],
             "suggestedActions": ["Find Schemes", "Check Eligibility", "File Grievance"]
         }
 
-    retrieved_context = ""
-    retrieved_schemes = []
+    detected_state = extract_state_from_query(user_query, user_profile)
+    is_male = "male" in query_lower and "female" not in query_lower
+    is_female = "female" in query_lower or "woman" in query_lower or "girl" in query_lower
 
-    # 1. Direct RAG Vector Retrieval from ChromaDB for the user's specific query
+    retrieved_context = ""
+    retrieved_scheme_names = []
+    context_chunks = []
+
+    # 1. Direct RAG Vector Retrieval from ChromaDB with State/Demographic filtering
     if rag_engine:
         try:
             from ingestion.ingest import generate_embedding
@@ -125,50 +148,110 @@ def generate_chatbot_response(user_query: str) -> dict:
             if count > 0:
                 results = rag_engine.collection.query(
                     query_embeddings=[query_vector],
-                    n_results=min(4, count),
+                    n_results=min(15, count),
                     include=["documents", "metadatas"]
                 )
                 if results and "metadatas" in results and results["metadatas"]:
-                    context_chunks = []
                     metas = results["metadatas"][0]
                     docs = results.get("documents", [[]])[0]
+                    
                     for meta, doc in zip(metas, docs):
-                        name = meta.get("scheme_name", "Government Scheme")
+                        name = meta.get("scheme_name") or meta.get("schemeName") or "Government Scheme"
+                        state = meta.get("state", "All India")
+                        gov_level = meta.get("government_level", meta.get("governmentLevel", "State"))
+                        gender = str(meta.get("gender", "All")).strip()
+                        
+                        # State Filter: Prioritize matched state or Central schemes, exclude other state exclusive schemes
+                        if detected_state and gov_level.capitalize() == "State":
+                            if state.lower() not in ["all india", "all", "central", "national", "unknown"]:
+                                if detected_state.lower() not in state.lower() and state.lower() not in detected_state.lower():
+                                    continue
+
+                        # Gender Filter
+                        if is_male and gender.lower() in ["female", "women", "girls"]:
+                            continue
+
+                        if name not in retrieved_scheme_names:
+                            retrieved_scheme_names.append(name)
+                        
                         benefits = meta.get("benefits", "")
-                        context_chunks.append(f"Scheme: {name}\nDetails: {doc}\nBenefits: {benefits}")
-                    retrieved_context = "\n\n".join(context_chunks)
+                        eligibility = meta.get("eligibility_text", meta.get("eligibility", ""))
+                        documents = meta.get("documents", "")
+                        app_url = meta.get("application_url", meta.get("application", ""))
+                        
+                        chunk_str = (
+                            f"Scheme Name: {name}\n"
+                            f"State: {state} (Level: {gov_level})\n"
+                            f"Details: {doc}\n"
+                            f"Benefits: {benefits}\n"
+                            f"Eligibility: {eligibility}\n"
+                            f"Documents Required: {documents}\n"
+                            f"Application Process: {app_url}"
+                        )
+                        context_chunks.append(chunk_str)
+                        if len(context_chunks) >= 6:
+                            break
+
+                    retrieved_context = "\n\n---\n\n".join(context_chunks)
         except Exception as e:
             print(f"[Chatbot Vector Search Error]: {e}")
 
-    # 2. Try Gemini AI LLM Generation with RAG Context
-    if GEMINI_API_KEY and (retrieved_context or len(query_lower) > 3):
-        system_prompt = (
-            "You are the official Civic AI Assistant for Central and State Government Welfare Schemes & Grievance Redressal in India.\n"
-            "Answer the user's question clearly, concisely, and helpfully in 2-4 sentences.\n"
-            f"User Question: '{user_query}'\n\n"
-            f"Retrieved Scheme Context:\n{retrieved_context if retrieved_context else 'Central and State Government Welfare Schemes'}\n\n"
-            "Provide an accurate and actionable response."
-        )
+    # Build Grounded System Prompt
+    system_prompt = (
+        "SYSTEM INSTRUCTIONS:\n"
+        "You are the official AI Assistant for Central and State Government Welfare Schemes & Grievance Redressal in India.\n"
+        "Answer the user's question clearly, accurately, and politely in 2-4 sentences using ONLY the verified scheme context below.\n"
+        "Do NOT invent non-existent schemes, eligibility rules, benefits, or application procedures.\n"
+        "If the user asks about a specific scheme (e.g. Kanyashree, SVMCM, PM Awas, PM Kisan), use the exact details, benefits, documents, and application steps from the context.\n"
+        "If the user specifies a state (e.g. West Bengal or Maharashtra), prioritize schemes applicable to that state and Central Government schemes. Never recommend another state's exclusive scheme.\n"
+        "If the retrieved context does not contain enough information to answer the question, explicitly state: 'The available scheme database does not contain enough information to answer this question.'\n\n"
+        f"USER QUESTION:\n{user_query}\n\n"
+        f"VERIFIED SCHEME CONTEXT:\n--- DATA START ---\n{retrieved_context if retrieved_context else 'No specific scheme documents retrieved.'}\n--- DATA END ---\n\n"
+        "Provide a helpful, grounded response:"
+    )
+
+    # 2. Call Gemini Generative AI LLM
+    if GEMINI_API_KEY and not GEMINI_API_KEY.startswith("your_"):
         ai_reply = query_gemini_llm(system_prompt)
         if ai_reply:
             return {
                 "reply": ai_reply,
-                "source": "Gemini 1.5 Flash AI Engine",
+                "source": "Gemini AI Engine (Grounded RAG)",
+                "sources": retrieved_scheme_names[:3],
                 "suggestedActions": ["Find Schemes", "Check Eligibility", "File Grievance"]
             }
 
-    # 3. Fallback Knowledge Matching
+    # 3. Direct RAG Grounded Fallback
+    if retrieved_context and retrieved_scheme_names:
+        first_scheme = retrieved_scheme_names[0]
+        reply_msg = f"Based on our official dataset, {first_scheme} matches your query. "
+        for item in DEFAULT_KNOWLEDGE_BASE:
+            if any(kw in query_lower for kw in item["keywords"]):
+                reply_msg += item["answer"]
+                break
+        else:
+            reply_msg += f"Details: {context_chunks[0][:300]}..."
+
+        return {
+            "reply": reply_msg,
+            "source": "Civic Vector RAG Knowledge Base",
+            "sources": retrieved_scheme_names[:3],
+            "suggestedActions": ["Find Schemes", "Check Eligibility", "File Grievance"]
+        }
+
+    # 4. Standard Keyword Fallback
     for item in DEFAULT_KNOWLEDGE_BASE:
         if any(kw in query_lower for kw in item["keywords"]):
             return {
                 "reply": item["answer"],
                 "source": "Civic Knowledge Base",
+                "sources": [],
                 "suggestedActions": ["View Schemes", "Check Eligibility", "File Grievance"]
             }
 
-    # Default friendly assistance
     return {
-        "reply": f"Regarding '{user_query}': You can find eligible Central and State welfare schemes (PM Awas, PM-JAY, PM Kisan, Scholarships) under the 'Scheme Recommender' tab, or submit civic complaints under 'File Grievance'.",
+        "reply": f"Regarding '{user_query}': You can explore eligible Central and State welfare schemes (PM Awas, PM Kisan, Ayushman Bharat, Scholarships) under 'Scheme Recommender' or report civic issues under 'File Grievance'.",
         "source": "Civic Welfare Assistant",
+        "sources": [],
         "suggestedActions": ["Find Schemes", "File Complaint", "Track Status"]
     }

@@ -171,12 +171,14 @@ class PythonMLService {
   /**
    * Send question to Python Chatbot Engine.
    */
-  async queryChatbot(message) {
+  async queryChatbot(message, conversationHistory = [], userProfile = null) {
     console.log('[CHATBOT] Request received');
     try {
       console.log(`[CHATBOT] Calling ML service: ${PYTHON_ML_URL}/chat`);
       const response = await axios.post(`${PYTHON_ML_URL}/chat`, {
-        message
+        message,
+        conversationHistory,
+        userProfile
       }, { timeout: 12000 });
 
       if (response.data && (response.data.success || response.data.reply)) {
@@ -185,6 +187,7 @@ class PythonMLService {
           success: true,
           reply: response.data.reply || response.data.message || "No reply generated",
           source: response.data.source || "Civic AI Assistant",
+          sources: response.data.sources || [],
           suggestedActions: response.data.suggestedActions || ["Find Schemes", "File Complaint", "Track Grievances"]
         };
         console.log('[CHATBOT] Response returned to frontend');
@@ -199,6 +202,7 @@ class PythonMLService {
       success: true,
       reply: "AI Assistant is temporarily unavailable. Please try again.",
       source: "Civic Assistant Service",
+      sources: [],
       suggestedActions: ["Find Schemes", "File Complaint", "Track Grievances"]
     };
   }

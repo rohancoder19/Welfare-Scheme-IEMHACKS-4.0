@@ -2,16 +2,22 @@ const pythonService = require('../services/pythonService');
 
 const handleChat = async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, conversationHistory, userProfile } = req.body;
     if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({ success: false, message: 'Message text is required and cannot be empty' });
     }
 
-    const response = await pythonService.queryChatbot(message.trim());
+    const response = await pythonService.queryChatbot(
+      message.trim(),
+      Array.isArray(conversationHistory) ? conversationHistory : [],
+      userProfile || null
+    );
+
     return res.json({
       success: true,
       reply: response.reply || "AI Assistant is temporarily unavailable. Please try again.",
       source: response.source || "Civic Assistant Service",
+      sources: response.sources || [],
       suggestedActions: Array.isArray(response.suggestedActions) ? response.suggestedActions : []
     });
   } catch (error) {
@@ -20,6 +26,7 @@ const handleChat = async (req, res) => {
       success: false,
       reply: "AI Assistant is temporarily unavailable. Please try again.",
       source: "Civic Assistant Service",
+      sources: [],
       suggestedActions: ["Find Schemes", "File Complaint", "Track Grievances"]
     });
   }

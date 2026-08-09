@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { sendChatMessageAPI } from '../services/chatbotAPI';
-import { Bot, Send, X, MessageSquare, Sparkles, User, RefreshCw } from 'lucide-react';
+import { Bot, Send, X, Sparkles, User, RefreshCw, Trash2, BookOpen } from 'lucide-react';
 
 const Chatbot = () => {
-  const location = useLocation();
+  const { user } = useSelector((state) => state.auth || {});
   const [isOpen, setIsOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,17 +27,34 @@ const Chatbot = () => {
     scrollToBottom();
   }, [messages, isOpen]);
 
+  const handleClearChat = () => {
+    setMessages([
+      {
+        sender: 'bot',
+        text: 'Chat history cleared. How can I assist you with government schemes or grievances today?',
+        suggestedActions: ['Find Eligible Schemes', 'Report Pothole/Water Issue', 'Ayushman Hospital List']
+      }
+    ]);
+  };
+
   const handleSend = async (textToSend) => {
     const query = textToSend || inputMessage;
     if (!query.trim()) return;
 
     const userMsg = { sender: 'user', text: query };
-    setMessages(prev => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     if (!textToSend) setInputMessage('');
     setLoading(true);
 
+    // Format recent conversation history for RAG context
+    const historyPayload = updatedMessages.slice(-10).map(m => ({
+      role: m.sender === 'user' ? 'user' : 'assistant',
+      content: m.text
+    }));
+
     try {
-      const res = await sendChatMessageAPI(query);
+      const res = await sendChatMessageAPI(query, historyPayload, user || null);
       if (res && res.reply) {
         setMessages(prev => [
           ...prev,
@@ -44,6 +62,7 @@ const Chatbot = () => {
             sender: 'bot',
             text: res.reply,
             source: res.source || 'Civic AI Assistant',
+            sources: res.sources || [],
             suggestedActions: res.suggestedActions || []
           }
         ]);
@@ -54,6 +73,7 @@ const Chatbot = () => {
             sender: 'bot',
             text: 'AI Assistant is temporarily unavailable. Please try again.',
             source: 'Civic Assistant',
+            sources: [],
             suggestedActions: ['Find Eligible Schemes', 'Report Pothole/Water Issue', 'Ayushman Hospital List']
           }
         ]);
@@ -65,6 +85,7 @@ const Chatbot = () => {
           sender: 'bot',
           text: 'AI Assistant is temporarily unavailable. Please try again.',
           source: 'Civic Assistant',
+          sources: [],
           suggestedActions: ['Find Eligible Schemes', 'Report Pothole/Water Issue', 'Ayushman Hospital List']
         }
       ]);
@@ -91,7 +112,7 @@ const Chatbot = () => {
 
       {/* Chat Window Container */}
       {isOpen && (
-        <div className="w-[380px] sm:w-[420px] h-[540px] glass-panel rounded-2xl shadow-2xl border border-gray-800 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="w-[360px] sm:w-[420px] h-[540px] max-w-[calc(100vw-2rem)] glass-panel rounded-2xl shadow-2xl border border-gray-800 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
           
           {/* Chat Header */}
           <div className="p-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
@@ -104,16 +125,25 @@ const Chatbot = () => {
                   CIVIC<span className="text-emerald-400">AI</span> Assistant
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 </h4>
-                <p className="text-[11px] text-gray-400">Scheme Eligibility & Grievance AI</p>
+                <p className="text-[11px] text-gray-400">3,400+ Scheme RAG Knowledge Base</p>
               </div>
             </div>
 
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleClearChat}
+                title="Clear Chat History"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-rose-400 hover:bg-gray-800 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Messages Body */}
@@ -129,12 +159,25 @@ const Chatbot = () => {
                   </div>
                 )}
 
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
+                <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
                   msg.sender === 'user'
                     ? 'bg-emerald-500 text-gray-950 font-medium rounded-tr-none shadow-md'
                     : 'bg-gray-900 border border-gray-800 text-gray-200 rounded-tl-none'
                 }`}>
                   {msg.text}
+
+                  {/* Sources attribution tag */}
+                  {msg.sources && msg.sources.length > 0 && (
+                    <div className="mt-2.5 pt-2 border-t border-gray-800/80 flex items-center gap-1.5 flex-wrap">
+                      <BookOpen className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="text-[10px] text-gray-400 font-semibold">Sources:</span>
+                      {msg.sources.map((src, i) => (
+                        <span key={i} className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300 text-[10px] border border-emerald-500/20">
+                          {src}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Suggested Quick Prompts */}
                   {msg.suggestedActions && msg.suggestedActions.length > 0 && (
@@ -163,7 +206,7 @@ const Chatbot = () => {
             {loading && (
               <div className="flex items-center gap-2 text-xs text-gray-400 italic">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-400" />
-                <span>AI analyzing scheme database...</span>
+                <span>AI searching 3,400+ schemes dataset...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -179,7 +222,7 @@ const Chatbot = () => {
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask about PM Awas, Kisan, Scholarships..."
+                placeholder="Ask about PM Awas, Kisan, West Bengal Scholarships..."
                 className="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50"
               />
               <button

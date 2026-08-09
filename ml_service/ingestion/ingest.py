@@ -102,6 +102,14 @@ def chunk_text(text: str, chunk_size: int = 600, overlap: int = 100) -> List[str
         start += (chunk_size - overlap)
     return chunks
 
+def safe_float(val, default=0.0) -> float:
+    if val is None:
+        return float(default)
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return float(default)
+
 class SchemeIngestionPipeline:
     def __init__(self, db_dir: str = CHROMA_DB_DIR):
         self.db_dir = db_dir
@@ -123,57 +131,100 @@ class SchemeIngestionPipeline:
 
         print(f"Ingesting {len(schemes)} schemes from {os.path.basename(json_filepath)} into ChromaDB...")
 
-        for scheme in schemes:
-            scheme_id = str(scheme.get('id', scheme.get('_id', '')))
-            scheme_name = scheme.get('schemeName', '')
-            category = scheme.get('category', 'General Welfare')
-            description = scheme.get('description', '')
-            benefits = scheme.get('benefits', '')
-            state = scheme.get('state', 'All India')
-            deadline = scheme.get('deadline', 'Active Year-round')
-            application_url = scheme.get('applicationUrl', '')
+        ids_batch, embeddings_batch, docs_batch, metas_batch = [], [], [], []
+        
+        for count, scheme in enumerate(schemes):
+            scheme_id = str(scheme.get('slug') or scheme.get('id') or scheme.get('_id') or f"scheme_{count+1}")
+            scheme_name = str(scheme.get('schemeName') or scheme.get('title') or f"Scheme {count+1}")
+            category = str(scheme.get('schemeCategory') or scheme.get('category') or 'General Welfare')
+            description = str(scheme.get('details') or scheme.get('description') or '')
+            benefits = str(scheme.get('benefits') or '')
+            eligibility_txt = str(scheme.get('eligibilityText') or scheme.get('eligibility') or '')
+            documents_txt = str(scheme.get('documents') or scheme.get('requiredDocuments') or '')
+            gov_level = str(scheme.get('governmentLevel') or scheme.get('level') or 'State')
+            state = str(scheme.get('state') or 'All India')
+            deadline = str(scheme.get('deadline') or 'Active Year-round')
+            application_url = str(scheme.get('application') or scheme.get('applicationUrl') or '')
+            tags = scheme.get('tags') or ''
+            if isinstance(tags, list):
+                tags = ", ".join(tags)
             
             crit = scheme.get('eligibilityCriteria', {})
-            max_income = float(crit.get('maxIncome', 1000000))
-            min_age = float(crit.get('minAge', 0))
-            max_age = float(crit.get('maxAge', 100))
-            gender = str(crit.get('gender', 'All'))
-            occupation = str(crit.get('occupation', 'All'))
-            social_cat = str(crit.get('category', 'All'))
+            if not isinstance(crit, dict):
+                crit = {}
 
-            full_text = f"Scheme Name: {scheme_name}\nCategory: {category}\nState: {state}\nDescription: {description}\nBenefits: {benefits}\nIncome Ceiling: ₹{max_income:,.0f}\nTarget Age: {min_age}-{max_age} years\nTarget Gender: {gender}\nTarget Occupation: {occupation}\nTarget Category: {social_cat}\nDeadline: {deadline}"
+            max_income = safe_float(crit.get('maxIncome') or scheme.get('max_income'), 1000000.0)
+            min_age = safe_float(crit.get('minAge') or scheme.get('min_age'), 0.0)
+            max_age = safe_float(crit.get('maxAge') or scheme.get('max_age'), 100.0)
+            gender = str(crit.get('gender') or scheme.get('gender') or 'All')
+            occupation = str(crit.get('occupation') or scheme.get('occupation') or 'All')
+            social_cat = str(crit.get('category') or scheme.get('social_category') or 'All')
+            is_student = bool(crit.get('student') if crit.get('student') is not None else scheme.get('student', False))
 
-            chunks = chunk_text(full_text, chunk_size=500, overlap=50)
+            full_text = (
+                f"Scheme Name: {scheme_name}\n"
+                f"Category: {category}\n"
+                f"Government Level: {gov_level} | State: {state}\n"
+                f"Description: {description}\n"
+                f"Benefits: {benefits}\n"
+                f"Eligibility: {eligibility_txt}\n"
+                f"Required Documents: {documents_txt}\n"
+                f"Application Process: {application_url}\n"
+                f"Income Ceiling: ₹{max_income:,.0f}\n"
+                f"Target Age: {min_age:.0f}-{max_age:.0f} years | Target Gender: {gender} | Target Occupation: {occupation} | Social Category: {social_cat} | Student: {is_student}\n"
+                f"Deadline: {deadline}\n"
+                f"Tags: {tags}"
+            )
+
+            chunks = chunk_text(full_text, chunk_size=600, overlap=50)
             if not chunks:
                 chunks = [full_text]
 
-            for idx, chunk in enumerate(chunks):
+            for idx, chunk in enumerate(chunks[:2]):
                 doc_id = f"{scheme_id}_chunk_{idx}"
                 embedding = generate_embedding(chunk)
                 
                 metadata = {
-                    "scheme_id": scheme_id,
-                    "scheme_name": scheme_name,
-                    "category": category,
-                    "description": description,
-                    "benefits": benefits,
-                    "state": state,
-                    "deadline": deadline,
-                    "application_url": application_url,
+                    "scheme_id": scheme_id[:100],
+                    "scheme_name": scheme_name[:150],
+                    "category": category[:100],
+                    "description": description[:300],
+                    "benefits": benefits[:300],
+                    "eligibility_text": eligibility_txt[:300],
+                    "documents": documents_txt[:300],
+                    "application_url": application_url[:200],
+                    "government_level": gov_level[:50],
+                    "state": state[:100],
                     "max_income": max_income,
                     "min_age": min_age,
                     "max_age": max_age,
-                    "gender": gender,
-                    "occupation": occupation,
-                    "social_category": social_cat
+                    "gender": gender[:50],
+                    "occupation": occupation[:100],
+                    "social_category": social_cat[:50],
+                    "student": is_student
                 }
 
-                self.collection.upsert(
-                    ids=[doc_id],
-                    embeddings=[embedding],
-                    documents=[chunk],
-                    metadatas=[metadata]
-                )
+                ids_batch.append(doc_id)
+                embeddings_batch.append(embedding)
+                docs_batch.append(chunk)
+                metas_batch.append(metadata)
+
+                if len(ids_batch) >= 100:
+                    self.collection.upsert(
+                        ids=ids_batch,
+                        embeddings=embeddings_batch,
+                        documents=docs_batch,
+                        metadatas=metas_batch
+                    )
+                    ids_batch, embeddings_batch, docs_batch, metas_batch = [], [], [], []
+
+        if ids_batch:
+            self.collection.upsert(
+                ids=ids_batch,
+                embeddings=embeddings_batch,
+                documents=docs_batch,
+                metadatas=metas_batch
+            )
 
         print(f"Successfully ingested {self.collection.count()} chunks into ChromaDB.")
 
@@ -341,15 +392,20 @@ class SchemeIngestionPipeline:
 
 def run_ingestion():
     pipeline = SchemeIngestionPipeline()
-    # 1. Ingest structured schemes JSON
-    json_path = os.path.join(DOCUMENTS_DIR, "sample_schemes.json")
-    if os.path.exists(json_path):
-        pipeline.ingest_structured_json(json_path)
+    # 1. Ingest structured schemes JSON (processed_welfare_schemes.json containing all 3,400 schemes)
+    processed_json = os.path.join(DOCUMENTS_DIR, "..", "processed_welfare_schemes.json")
+    if os.path.exists(processed_json):
+        pipeline.ingest_structured_json(processed_json)
+    else:
+        json_path = os.path.join(DOCUMENTS_DIR, "sample_schemes.json")
+        if os.path.exists(json_path):
+            pipeline.ingest_structured_json(json_path)
 
-    # 2. Ingest CSV scheme documents in DOCUMENTS_DIR and ml_service root
-    csv_files = glob.glob(os.path.join(DOCUMENTS_DIR, "*.csv")) + glob.glob(os.path.join(os.path.dirname(DOCUMENTS_DIR), "*.csv"))
-    for csv_file in csv_files:
-        pipeline.ingest_csv_documents(csv_file)
+    # 2. Ingest CSV scheme documents in DOCUMENTS_DIR and ml_service root (excluding updated_data.csv to prevent duplication if processed_json was ingested)
+    if not os.path.exists(processed_json):
+        csv_files = glob.glob(os.path.join(DOCUMENTS_DIR, "*.csv")) + glob.glob(os.path.join(os.path.dirname(DOCUMENTS_DIR), "*.csv"))
+        for csv_file in csv_files:
+            pipeline.ingest_csv_documents(csv_file)
 
     # 3. Ingest any PDF scheme documents
     pipeline.ingest_pdf_documents(DOCUMENTS_DIR)
