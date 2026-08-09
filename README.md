@@ -4,6 +4,7 @@
 > - **Frontend (React Application):** [https://welfare-scheme-frontend.onrender.com](https://welfare-scheme-frontend.onrender.com)
 > - **Backend API Server (Express.js):** [https://welfare-scheme-api.onrender.com](https://welfare-scheme-api.onrender.com)
 > - **ML Microservice (FastAPI + ChromaDB):** [https://welfare-scheme-ml.onrender.com](https://welfare-scheme-ml.onrender.com)
+> - **VIDEO DEMO(YOUTUBE):** [https://youtu.be/lrghmKdqY_o]
 
 ![Welfare Scheme Platform Preview](docs/assets/welfare_scheme_portal.png)
 
