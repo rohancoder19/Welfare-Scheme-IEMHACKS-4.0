@@ -69,10 +69,19 @@ const healthHandler = (req, res) => {
   res.json({
     status: 'healthy',
     service: 'Civic Welfare & Grievance Express Backend API',
+    endpoints: {
+      health: '/api/health',
+      schemes: '/api/schemes',
+      auth: '/api/auth',
+      complaints: '/api/complaints',
+      admin: '/api/admin',
+      chatbot: '/api/chatbot'
+    },
     time: new Date().toISOString()
   });
 };
 
+app.get('/', healthHandler);
 app.get('/health', healthHandler);
 app.get('/api/health', healthHandler);
 
