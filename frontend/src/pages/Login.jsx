@@ -47,26 +47,26 @@ const Login = ({ message }) => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full glass-panel rounded-3xl p-8 border border-gray-800 space-y-6 shadow-2xl relative">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8 sm:py-12">
+      <div className="max-w-md w-full glass-panel rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-gray-800 space-y-5 sm:space-y-6 shadow-2xl relative">
         
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-xl shadow-indigo-500/20 mx-auto overflow-hidden">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-xl shadow-indigo-500/20 mx-auto overflow-hidden">
             <img src="/app-logo.jpg" alt="Welfare Scheme Icon" className="w-full h-full object-cover rounded-[14px]" />
           </div>
-          <h2 className="text-2xl font-bold text-white">Sign In to Portal</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">Sign In to Portal</h2>
           <p className="text-xs text-gray-400">Access personalized scheme recommendations & grievance tracking</p>
         </div>
 
         {message && (
-          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold text-center">
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold text-center break-words">
             {message}
           </div>
         )}
 
         {error && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium text-center">
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium text-center break-words">
             {error}
           </div>
         )}
@@ -103,9 +103,9 @@ const Login = ({ message }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all mt-4"
+            className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all mt-4 min-h-[44px] active:scale-95"
           >
-            {loading ? 'Authenticating...' : 'Sign In'}
+            <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>

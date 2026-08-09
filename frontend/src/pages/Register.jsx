@@ -61,14 +61,14 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="max-w-2xl w-full glass-panel rounded-3xl p-8 border border-gray-800 space-y-6 shadow-2xl">
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-8 sm:py-12">
+      <div className="max-w-2xl w-full glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-gray-800 space-y-5 sm:space-y-6 shadow-2xl">
         
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-xl shadow-indigo-500/20 mx-auto overflow-hidden">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-xl shadow-indigo-500/20 mx-auto overflow-hidden">
             <img src="/app-logo.jpg" alt="Welfare Scheme Icon" className="w-full h-full object-cover rounded-[14px]" />
           </div>
-          <h2 className="text-2xl font-bold text-white">
+          <h2 className="text-xl sm:text-2xl font-bold text-white break-words">
             {formData.role === 'Citizen' ? 'Create Citizen Account' : 'Create Municipal Officer / Admin Account'}
           </h2>
           <p className="text-xs text-gray-400">
@@ -79,21 +79,21 @@ const Register = () => {
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium text-center">
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium text-center break-words">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           
           {/* Account Type Role Selection */}
-          <div className="md:col-span-2 space-y-1.5">
+          <div className="sm:col-span-2 space-y-1.5">
             <label className="block text-xs font-medium text-gray-300">Register Account As *</label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, role: 'Citizen' })}
-                className={`py-3 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                className={`py-3 px-3.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
                   formData.role === 'Citizen' 
                     ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-lg shadow-emerald-500/10' 
                     : 'bg-gray-950 text-gray-400 border-gray-800 hover:text-white'
@@ -265,16 +265,18 @@ const Register = () => {
             </select>
           </div>
 
-          <div className="md:col-span-2 pt-2">
+          <div className="sm:col-span-2 pt-2">
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all"
+              className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all min-h-[44px] active:scale-95"
             >
-              {loading 
-                ? 'Creating Account...' 
-                : (formData.role === 'Citizen' ? 'Complete Registration & Start AI Match' : 'Register Officer Account & Access Command Center')}
-              <ArrowRight className="w-4 h-4" />
+              <span>
+                {loading 
+                  ? 'Creating Account...' 
+                  : (formData.role === 'Citizen' ? 'Complete Registration & Start AI Match' : 'Register Officer Account & Access Command Center')}
+              </span>
+              <ArrowRight className="w-4 h-4 shrink-0" />
             </button>
           </div>
 

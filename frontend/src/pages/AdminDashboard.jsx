@@ -175,79 +175,79 @@ const AdminDashboard = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       
       {/* Header */}
-      <div className="glass-panel rounded-3xl p-8 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-semibold uppercase tracking-wider border border-amber-500/20 mb-2">
-            <Cpu className="w-3.5 h-3.5" />
-            AI GRIEVANCE INTELLIGENCE SYSTEM & COMMAND CENTER
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider border border-amber-500/20 mb-2 max-w-full flex-wrap">
+            <Cpu className="w-3.5 h-3.5 shrink-0" />
+            <span className="break-words">AI GRIEVANCE INTELLIGENCE SYSTEM & COMMAND CENTER</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white">Smart Priority Queue & Operational Triage</h1>
-          <p className="text-sm text-gray-400 mt-1">Review AI urgency scores, conduct Human-in-the-Loop overrides, track SLA countdowns, and dispatch field units.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white break-words">Smart Priority Queue & Operational Triage</h1>
+          <p className="text-xs sm:text-sm text-gray-400 mt-1">Review AI urgency scores, conduct Human-in-the-Loop overrides, track SLA countdowns, and dispatch field units.</p>
         </div>
       </div>
 
       {/* Smart Priority Queue Counter Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div 
           onClick={() => setPriorityFilter('CRITICAL')}
-          className={`glass-panel p-5 rounded-2xl border cursor-pointer transition-all ${
+          className={`glass-panel p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border cursor-pointer transition-all ${
             priorityFilter === 'CRITICAL' ? 'ring-2 ring-red-500 bg-red-500/10 border-red-500/50' : 'border-red-500/30 hover:border-red-500/60'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-red-400 uppercase tracking-wider">🔴 CRITICAL</span>
-            <AlertOctagon className="w-4 h-4 text-red-400 animate-pulse" />
+            <span className="text-[10px] sm:text-xs font-bold text-red-400 uppercase tracking-wider">🔴 CRITICAL</span>
+            <AlertOctagon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400 animate-pulse shrink-0" />
           </div>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-3xl font-black text-red-400 font-mono">{criticalCount}</span>
-            <span className="text-[11px] text-gray-400">Immediate Action</span>
+          <div className="mt-2 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+            <span className="text-2xl sm:text-3xl font-black text-red-400 font-mono">{criticalCount}</span>
+            <span className="text-[10px] sm:text-[11px] text-gray-400">Immediate Action</span>
           </div>
         </div>
 
         <div 
           onClick={() => setPriorityFilter('HIGH')}
-          className={`glass-panel p-5 rounded-2xl border cursor-pointer transition-all ${
+          className={`glass-panel p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border cursor-pointer transition-all ${
             priorityFilter === 'HIGH' ? 'ring-2 ring-rose-500 bg-rose-500/10 border-rose-500/50' : 'border-rose-500/30 hover:border-rose-500/60'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">🟠 HIGH</span>
-            <AlertTriangle className="w-4 h-4 text-rose-400" />
+            <span className="text-[10px] sm:text-xs font-bold text-rose-400 uppercase tracking-wider">🟠 HIGH</span>
+            <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400 shrink-0" />
           </div>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-3xl font-black text-rose-400 font-mono">{highCount}</span>
-            <span className="text-[11px] text-gray-400">High Urgency</span>
+          <div className="mt-2 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+            <span className="text-2xl sm:text-3xl font-black text-rose-400 font-mono">{highCount}</span>
+            <span className="text-[10px] sm:text-[11px] text-gray-400">High Urgency</span>
           </div>
         </div>
 
         <div 
           onClick={() => setPriorityFilter('MEDIUM')}
-          className={`glass-panel p-5 rounded-2xl border cursor-pointer transition-all ${
+          className={`glass-panel p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border cursor-pointer transition-all ${
             priorityFilter === 'MEDIUM' ? 'ring-2 ring-amber-400 bg-amber-400/10 border-amber-400/50' : 'border-amber-400/30 hover:border-amber-400/60'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">🟡 MEDIUM</span>
-            <Clock className="w-4 h-4 text-amber-400" />
+            <span className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">🟡 MEDIUM</span>
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
           </div>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-3xl font-black text-amber-400 font-mono">{mediumCount}</span>
-            <span className="text-[11px] text-gray-400">Standard Queue</span>
+          <div className="mt-2 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+            <span className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">{mediumCount}</span>
+            <span className="text-[10px] sm:text-[11px] text-gray-400">Standard Queue</span>
           </div>
         </div>
 
         <div 
           onClick={() => setPriorityFilter('LOW')}
-          className={`glass-panel p-5 rounded-2xl border cursor-pointer transition-all ${
+          className={`glass-panel p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border cursor-pointer transition-all ${
             priorityFilter === 'LOW' ? 'ring-2 ring-emerald-400 bg-emerald-400/10 border-emerald-400/50' : 'border-emerald-400/30 hover:border-emerald-400/60'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">🟢 LOW</span>
-            <CheckCircle className="w-4 h-4 text-emerald-400" />
+            <span className="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider">🟢 LOW</span>
+            <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
           </div>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-3xl font-black text-emerald-400 font-mono">{lowCount}</span>
+          <div className="mt-2 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+            <span className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">{lowCount}</span>
             <span className="text-[11px] text-gray-400">Routine Maintenance</span>
           </div>
         </div>

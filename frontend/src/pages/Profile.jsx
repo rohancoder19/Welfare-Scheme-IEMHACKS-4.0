@@ -47,30 +47,30 @@ const Profile = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       
-      <div className="glass-panel rounded-3xl p-8 border border-gray-800 flex items-center gap-6">
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-gray-950 flex items-center justify-center font-black text-3xl shadow-xl">
-          {formData.name[0]}
+      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-gray-800 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-gray-950 flex items-center justify-center font-black text-2xl sm:text-3xl shadow-xl shrink-0">
+          {formData.name[0] || 'U'}
         </div>
         <div>
           <span className="text-xs font-mono uppercase text-emerald-400 font-bold block mb-1">
             Role: {user?.role || 'Citizen Applicant'}
           </span>
-          <h1 className="text-3xl font-extrabold text-white">{formData.name}</h1>
-          <p className="text-sm text-gray-400">{formData.email}</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white break-words">{formData.name}</h1>
+          <p className="text-xs sm:text-sm text-gray-400 break-words">{formData.email}</p>
         </div>
       </div>
 
       {saved && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2">
-          <CheckCircle className="w-4 h-4" />
-          Profile updated! AI Scheme model will adjust predictions dynamically.
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2 break-words">
+          <CheckCircle className="w-4 h-4 shrink-0" />
+          <span>Profile updated! AI Scheme model will adjust predictions dynamically.</span>
         </div>
       )}
 
-      <div className="glass-panel rounded-3xl p-8 border border-gray-800 space-y-6">
-        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-          <User className="w-5 h-5 text-emerald-400" />
-          Demographic & Scheme Eligibility Parameters
+      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-gray-800 space-y-6">
+        <h3 className="text-base sm:text-xl font-bold text-white flex items-center gap-2">
+          <User className="w-5 h-5 text-emerald-400 shrink-0" />
+          <span>Demographic & Scheme Eligibility Parameters</span>
         </h3>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -112,7 +112,7 @@ const Profile = () => {
 
           <div>
             <label className="block text-xs font-medium text-gray-300 mb-1">Age & Gender</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 type="number"
                 value={formData.age}
@@ -164,10 +164,10 @@ const Profile = () => {
           <div className="md:col-span-2 pt-4">
             <button
               type="submit"
-              className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 active:scale-95 min-h-[44px]"
             >
               <Save className="w-4 h-4" />
-              Save Profile Changes
+              <span>Save Profile Changes</span>
             </button>
           </div>
 

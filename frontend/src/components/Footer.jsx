@@ -5,15 +5,15 @@ const Footer = () => {
   return (
     <footer className="bg-gray-950 border-t border-gray-900 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-gray-900">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 pb-12 border-b border-gray-900">
           
           {/* Brand Info */}
-          <div className="space-y-4">
+          <div className="space-y-4 sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-lg overflow-hidden">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-600 p-0.5 shadow-lg overflow-hidden shrink-0">
                 <img src="/app-logo.jpg" alt="App Logo" className="w-full h-full object-cover rounded-[7px]" />
               </div>
-              <span className="text-lg font-bold text-white tracking-wide">
+              <span className="text-base sm:text-lg font-bold text-white tracking-wide">
                 WELFARE<span className="text-emerald-400"> SCHEME</span> PORTAL
               </span>
             </div>
@@ -28,7 +28,7 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-200 mb-4">Welfare Services</h4>
+            <h4 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-gray-200 mb-4">Welfare Services</h4>
             <ul className="space-y-2.5 text-sm text-gray-400">
               <li><a href="/welfare-finder" className="hover:text-emerald-400 transition-colors">AI Scheme Recommender</a></li>
               <li><a href="/#schemes" className="hover:text-emerald-400 transition-colors">Housing & Infrastructure</a></li>
@@ -40,7 +40,7 @@ const Footer = () => {
 
           {/* Grievance Cell */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-200 mb-4">Grievance Cell</h4>
+            <h4 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-gray-200 mb-4">Grievance Cell</h4>
             <ul className="space-y-2.5 text-sm text-gray-400">
               <li><a href="/complaint" className="hover:text-rose-400 transition-colors">Report Road Pothole / Street Light</a></li>
               <li><a href="/complaint" className="hover:text-rose-400 transition-colors">Water Pipeline Burst / Sewerage</a></li>
@@ -52,22 +52,22 @@ const Footer = () => {
 
           {/* Emergency Helplines */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-200 mb-4">Helpline & Support</h4>
+            <h4 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-gray-200 mb-4">Helpline & Support</h4>
             <ul className="space-y-3 text-sm text-gray-400">
-              <li className="flex items-center gap-2.5 text-emerald-400 font-mono font-medium">
-                <Phone className="w-4 h-4 text-emerald-400" />
+              <li className="flex items-center gap-2 text-emerald-400 font-mono font-medium text-xs sm:text-sm">
+                <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
                 National Portal: 1800-11-2026
               </li>
-              <li className="flex items-center gap-2.5 text-rose-400 font-mono font-medium">
-                <Phone className="w-4 h-4 text-rose-400" />
-                Women Safety Emergency: 1091 / 112
+              <li className="flex items-center gap-2 text-rose-400 font-mono font-medium text-xs sm:text-sm">
+                <Phone className="w-4 h-4 text-rose-400 shrink-0" />
+                Women Safety: 1091 / 112
               </li>
-              <li className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-sky-400" />
+              <li className="flex items-center gap-2 text-xs sm:text-sm">
+                <Mail className="w-4 h-4 text-sky-400 shrink-0" />
                 support@civicai.gov.in
               </li>
-              <li className="flex items-center gap-2.5">
-                <MapPin className="w-4 h-4 text-indigo-400" />
+              <li className="flex items-center gap-2 text-xs sm:text-sm">
+                <MapPin className="w-4 h-4 text-indigo-400 shrink-0" />
                 Central Secretariat, New Delhi, India
               </li>
             </ul>
@@ -75,9 +75,9 @@ const Footer = () => {
 
         </div>
 
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-500 text-center md:text-left">
           <p>© 2026 CivicAI National Governance System. Built for IEM Hacks.</p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <a href="#" className="hover:text-gray-400">Privacy Policy</a>
             <a href="#" className="hover:text-gray-400">Terms of Service</a>
             <a href="#" className="hover:text-gray-400">Government Open Data API</a>

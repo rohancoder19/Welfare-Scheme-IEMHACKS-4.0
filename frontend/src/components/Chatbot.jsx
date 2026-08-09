@@ -95,24 +95,25 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
       {/* Floating Toggle Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="group flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 text-gray-950 font-bold shadow-2xl hover:scale-105 transition-transform glow-emerald"
+          aria-label="Open AI Welfare Assistant Chat"
+          className="group flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-3 sm:py-3.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 text-gray-950 font-bold text-xs sm:text-sm shadow-2xl hover:scale-105 transition-transform glow-emerald"
         >
-          <div className="w-7 h-7 rounded-full bg-gray-950/20 flex items-center justify-center">
-            <Bot className="w-5 h-5 text-gray-950 animate-bounce" />
+          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-950/20 flex items-center justify-center shrink-0">
+            <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-gray-950 animate-bounce" />
           </div>
           <span>AI Welfare Assistant</span>
-          <Sparkles className="w-4 h-4 text-amber-300" />
+          <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
         </button>
       )}
 
       {/* Chat Window Container */}
       {isOpen && (
-        <div className="w-[360px] sm:w-[420px] h-[540px] max-w-[calc(100vw-2rem)] glass-panel rounded-2xl shadow-2xl border border-gray-800 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="w-[calc(100vw-2rem)] sm:w-[420px] h-[500px] max-h-[82vh] glass-panel rounded-2xl shadow-2xl border border-gray-800 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
           
           {/* Chat Header */}
           <div className="p-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">

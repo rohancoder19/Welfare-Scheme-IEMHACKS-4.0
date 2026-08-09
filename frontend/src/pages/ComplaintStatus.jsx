@@ -103,32 +103,32 @@ const ComplaintStatus = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       
       {/* Header */}
-      <div className="glass-panel rounded-3xl p-8 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 text-xs font-semibold uppercase tracking-wider border border-sky-500/20 mb-2">
-            <FileText className="w-3.5 h-3.5" />
-            TRANSPARENT CIVIC GRIEVANCE TRACKING TIMELINE
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider border border-sky-500/20 mb-2 max-w-full flex-wrap">
+            <FileText className="w-3.5 h-3.5 shrink-0" />
+            <span className="break-words">TRANSPARENT CIVIC GRIEVANCE TRACKING TIMELINE</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white">Live Grievance & AI Triage Tracker</h1>
-          <p className="text-sm text-gray-400 mt-1">Track automated AI triage results, officer dispatch logs, department assignments, and resolution SLAs.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white break-words">Live Grievance & AI Triage Tracker</h1>
+          <p className="text-xs sm:text-sm text-gray-400 mt-1">Track automated AI triage results, officer dispatch logs, department assignments, and resolution SLAs.</p>
         </div>
 
         <button
           onClick={loadComplaints}
-          className="px-4 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-300 hover:text-white font-semibold text-xs flex items-center gap-1.5 w-fit"
+          className="px-4 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-300 hover:text-white font-semibold text-xs flex items-center justify-center gap-1.5 w-full sm:w-fit active:scale-95 shrink-0"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Refresh Status
+          <span>Refresh Status</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
         
         {/* Left List of My Complaints */}
         <div className="space-y-4">
-          <h3 className="text-base font-bold text-white flex items-center justify-between">
+          <h3 className="text-sm sm:text-base font-bold text-white flex items-center justify-between">
             <span>Filed Grievances</span>
-            <span className="px-2 py-0.5 rounded bg-gray-900 text-emerald-400 text-xs font-mono">
+            <span className="px-2.5 py-0.5 rounded bg-gray-900 text-emerald-400 text-xs font-mono">
               {complaints.length}
             </span>
           </h3>
@@ -156,15 +156,15 @@ const ComplaintStatus = () => {
         {/* Right Timeline & Details view */}
         <div className="lg:col-span-2 space-y-6">
           {selectedComplaint ? (
-            <div className="glass-panel rounded-3xl p-8 border border-gray-800 space-y-8">
+            <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-gray-800 space-y-6 sm:space-y-8">
               
               {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4 sm:pb-6">
                 <div>
-                  <span className="text-xs font-mono uppercase text-sky-400 font-bold block mb-1">
+                  <span className="text-[11px] sm:text-xs font-mono uppercase text-sky-400 font-bold block mb-1 break-all">
                     Grievance Ref: #{selectedComplaint._id || selectedComplaint.id}
                   </span>
-                  <h2 className="text-2xl font-bold text-white">{selectedComplaint.title}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white break-words">{selectedComplaint.title}</h2>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -185,11 +185,11 @@ const ComplaintStatus = () => {
               {(() => {
                 const sla = getSLAInfo(selectedComplaint);
                 return (
-                  <div className={`p-4 rounded-2xl flex items-center justify-between border ${
+                  <div className={`p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border ${
                     sla.isBreached ? 'bg-red-500/20 border-red-500/40 text-red-400 animate-pulse' : 'bg-sky-500/10 border-sky-500/20 text-sky-300'
                   }`}>
                     <div className="flex items-center gap-2 text-xs font-bold">
-                      <Timer className="w-4 h-4" />
+                      <Timer className="w-4 h-4 shrink-0" />
                       <span>Resolution SLA Guarantee:</span>
                       <span className="font-mono">{selectedComplaint.slaHours || 48} Hours</span>
                     </div>
@@ -203,19 +203,19 @@ const ComplaintStatus = () => {
               <div className="space-y-4">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">Civic Resolution Lifecycle Stepper</h4>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-center relative">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-center relative">
                   {timelineSteps.map((stepLabel, idx) => {
                     const activeIdx = getStepIndex(selectedComplaint.status);
                     const isPassed = idx <= activeIdx;
 
                     return (
-                      <div key={stepLabel} className="space-y-2 relative z-10">
-                        <div className={`w-8 h-8 rounded-full mx-auto flex items-center justify-center font-bold text-xs transition-all ${
+                      <div key={stepLabel} className="space-y-1.5 relative z-10 p-2 rounded-xl bg-gray-900/50 border border-gray-800/80">
+                        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full mx-auto flex items-center justify-center font-bold text-xs transition-all ${
                           isPassed ? 'bg-emerald-500 text-gray-950 font-black glow-emerald' : 'bg-gray-900 border border-gray-800 text-gray-500'
                         }`}>
                           {idx + 1}
                         </div>
-                        <span className={`block text-[11px] font-semibold leading-tight ${isPassed ? 'text-emerald-400' : 'text-gray-500'}`}>
+                        <span className={`block text-[10px] sm:text-[11px] font-semibold leading-tight break-words ${isPassed ? 'text-emerald-400' : 'text-gray-500'}`}>
                           {stepLabel}
                         </span>
                       </div>
@@ -225,7 +225,7 @@ const ComplaintStatus = () => {
               </div>
 
               {/* AI Explanation Card */}
-              <div className="glass-panel p-6 rounded-2xl border border-sky-500/30 space-y-4">
+              <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-sky-500/30 space-y-4">
                 <div className="flex items-center justify-between border-b border-gray-800 pb-3">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-sky-400" />
